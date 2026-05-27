@@ -62,6 +62,14 @@ $route['admin/admins'] = 'admin/admin/index';
 $route['admin/admins/store'] = 'admin/admin/store';
 $route['admin/admins/update/(:num)'] = 'admin/admin/update/$1';
 $route['admin/admins/delete/(:num)'] = 'admin/admin/delete/$1';
+$route['admin/categories'] = 'admin/categories/index';
+$route['admin/categories/store'] = 'admin/categories/store';
+$route['admin/categories/update/(:num)'] = 'admin/categories/update/$1';
+$route['admin/categories/delete/(:num)'] = 'admin/categories/delete/$1';
+$route['admin/courses'] = 'admin/courses/index';
+$route['admin/courses/store'] = 'admin/courses/store';
+$route['admin/courses/update/(:num)'] = 'admin/courses/update/$1';
+$route['admin/courses/delete/(:num)'] = 'admin/courses/delete/$1';
 $route['admin/logout'] = 'admin/auth/logout';
 /*
 
