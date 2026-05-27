@@ -74,10 +74,18 @@ $route['admin/course-details/(:num)'] = 'admin/course_details/index/$1';
 $route['admin/course-details/store/(:num)'] = 'admin/course_details/store/$1';
 $route['admin/course-details/update/(:num)'] = 'admin/course_details/update/$1';
 $route['admin/course-details/delete/(:num)'] = 'admin/course_details/delete/$1';
+$route['admin/course-instructors/(:num)'] = 'admin/course_instructors/index/$1';
+$route['admin/course-instructors/store/(:num)'] = 'admin/course_instructors/store/$1';
+$route['admin/course-instructors/update/(:num)'] = 'admin/course_instructors/update/$1';
+$route['admin/course-instructors/delete/(:num)'] = 'admin/course_instructors/delete/$1';
 $route['admin/batches'] = 'admin/batches/index';
 $route['admin/batches/store'] = 'admin/batches/store';
 $route['admin/batches/update/(:num)'] = 'admin/batches/update/$1';
 $route['admin/batches/delete/(:num)'] = 'admin/batches/delete/$1';
+$route['admin/instructors'] = 'admin/instructors/index';
+$route['admin/instructors/store'] = 'admin/instructors/store';
+$route['admin/instructors/update/(:num)'] = 'admin/instructors/update/$1';
+$route['admin/instructors/delete/(:num)'] = 'admin/instructors/delete/$1';
 $route['admin/logout'] = 'admin/auth/logout';
 /*
 

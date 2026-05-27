@@ -135,11 +135,12 @@ if (!empty($edit_course->published_at)) {
                             <div class="card-header bg-primary text-white d-flex align-items-center justify-content-between gap-3">
                                 <h3 class="h5 mb-0">รายการหลักสูตร</h3>
                                 <div class="d-flex flex-wrap gap-2">
-                                    <a class="btn btn-outline-primary btn-sm" href="<?= site_url('admin/courses'); ?>">รีเฟรช</a>
+                                    <a class="btn btn-light btn-sm text-primary" href="<?= site_url('admin/categories'); ?>">หมวดหมู่หลักสูตร</a>
+                                    <a class="btn btn-light btn-sm text-primary" href="<?= site_url('admin/courses'); ?>">รีเฟรช</a>
                                     <?php if ($is_edit): ?>
-                                        <a class="btn btn-primary btn-sm" href="<?= site_url('admin/courses'); ?>">เพิ่มหลักสูตร</a>
+                                        <a class="btn btn-warning btn-sm text-dark" href="<?= site_url('admin/courses'); ?>">เพิ่มหลักสูตร</a>
                                     <?php else: ?>
-                                        <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#courseFormModal" <?= empty($categories) ? 'disabled' : ''; ?>>
+                                        <button class="btn btn-warning btn-sm text-dark" type="button" data-bs-toggle="modal" data-bs-target="#courseFormModal" <?= empty($categories) ? 'disabled' : ''; ?>>
                                             เพิ่มหลักสูตร
                                         </button>
                                     <?php endif; ?>
@@ -190,6 +191,7 @@ if (!empty($edit_course->published_at)) {
                                                         <div class="d-flex flex-wrap gap-2">
                                                             <a class="btn btn-sm btn-outline-primary" href="<?= site_url('admin/courses?edit='.$course->id); ?>">แก้ไข</a>
                                                             <a class="btn btn-sm btn-outline-info" href="<?= site_url('admin/course-details/'.$course->id); ?>">รายละเอียด</a>
+                                                            <a class="btn btn-sm btn-outline-success" href="<?= site_url('admin/course-instructors/'.$course->id); ?>">วิทยากร</a>
                                                             <form class="js-course-delete-form" method="post" action="<?= site_url('admin/courses/delete/'.$course->id); ?>" data-course-title="<?= html_escape($course->title); ?>">
                                                                 <button class="btn btn-sm btn-outline-danger" type="submit">ลบ</button>
                                                             </form>
