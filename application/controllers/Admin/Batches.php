@@ -1,0 +1,181 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+/**
+ * @property CI_Input $input
+ * @property CI_Loader $load
+ * @property CI_Session $session
+ * @property Batch_model $Batch_model
+ * @property Course_model $Course_model
+ */
+class Batches extends CI_Controller
+{
+    private $statuses = array(1, 2, 3);
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->library('session');
+        $this->load->model('Batch_model');
+        $this->load->model('Course_model');
+
+        if (!$this->session->userdata('admin_logged_in')) {
+            redirect('admin');
+        }
+    }
+
+    public function index()
+    {
+        $edit_id = (int) $this->input->get('edit');
+        $edit_batch = $edit_id > 0 ? $this->Batch_model->get_by_id($edit_id) : NULL;
+
+        $this->load->view('admins/batches', array(
+            'batches' => $this->Batch_model->get_all(),
+            'courses' => $this->Course_model->get_all(),
+            'stats' => $this->Batch_model->get_stats(),
+            'edit_batch' => $edit_batch,
+            'statuses' => $this->statuses
+        ));
+    }
+
+    public function store()
+    {
+        $data = $this->get_post_data();
+        $error = $this->validate_batch($data);
+
+        if ($error !== '') {
+            $this->session->set_flashdata('error', $error);
+            redirect('admin/batches');
+            return;
+        }
+
+        $this->Batch_model->create_batch($data);
+        $this->session->set_flashdata('success', 'เพิ่มรุ่นอบรมเรียบร้อยแล้ว');
+        redirect('admin/batches');
+    }
+
+    public function update($id)
+    {
+        $batch = $this->Batch_model->get_by_id($id);
+
+        if (!$batch) {
+            $this->session->set_flashdata('error', 'ไม่พบข้อมูลรุ่นอบรม');
+            redirect('admin/batches');
+            return;
+        }
+
+        $data = $this->get_post_data();
+        $error = $this->validate_batch($data);
+
+        if ($error !== '') {
+            $this->session->set_flashdata('error', $error);
+            redirect('admin/batches?edit='.(int) $id);
+            return;
+        }
+
+        $this->Batch_model->update_batch($id, $data);
+        $this->session->set_flashdata('success', 'แก้ไขรุ่นอบรมเรียบร้อยแล้ว');
+        redirect('admin/batches');
+    }
+
+    public function delete($id)
+    {
+        $id = (int) $id;
+
+        if (!$this->Batch_model->get_by_id($id)) {
+            $this->session->set_flashdata('error', 'ไม่พบข้อมูลรุ่นอบรม');
+            redirect('admin/batches');
+            return;
+        }
+
+        if ($this->Batch_model->count_registrations($id) > 0) {
+            $this->session->set_flashdata('error', 'ไม่สามารถลบรุ่นอบรมที่มีผู้ลงทะเบียนอยู่ได้');
+            redirect('admin/batches');
+            return;
+        }
+
+        $this->Batch_model->delete_batch($id);
+        $this->session->set_flashdata('success', 'ลบรุ่นอบรมเรียบร้อยแล้ว');
+        redirect('admin/batches');
+    }
+
+    private function get_post_data()
+    {
+        return array(
+            'course_id' => (int) $this->input->post('course_id', TRUE),
+            'batch_no' => trim((string) $this->input->post('batch_no', TRUE)),
+            'start_date' => $this->normalize_date($this->input->post('start_date', TRUE)),
+            'end_date' => $this->normalize_date($this->input->post('end_date', TRUE)),
+            'start_time' => $this->normalize_time($this->input->post('start_time', TRUE)),
+            'end_time' => $this->normalize_time($this->input->post('end_time', TRUE)),
+            'registration_start' => $this->normalize_datetime($this->input->post('registration_start', TRUE)),
+            'registration_end' => $this->normalize_datetime($this->input->post('registration_end', TRUE)),
+            'capacity' => max(0, (int) $this->input->post('capacity', TRUE)),
+            'status' => (int) $this->input->post('status', TRUE)
+        );
+    }
+
+    private function validate_batch($data)
+    {
+        if ($data['course_id'] <= 0) {
+            return 'กรุณาเลือกหลักสูตร';
+        }
+
+        if (!$this->Course_model->get_by_id($data['course_id'])) {
+            return 'หลักสูตรไม่ถูกต้อง';
+        }
+
+        if (!in_array($data['status'], $this->statuses, TRUE)) {
+            return 'สถานะรุ่นอบรมไม่ถูกต้อง';
+        }
+
+        if ($data['start_date'] !== NULL && $data['end_date'] !== NULL && $data['end_date'] < $data['start_date']) {
+            return 'วันที่สิ้นสุดอบรมต้องไม่น้อยกว่าวันที่เริ่มอบรม';
+        }
+
+        if ($data['registration_start'] !== NULL && $data['registration_end'] !== NULL && $data['registration_end'] < $data['registration_start']) {
+            return 'วันปิดรับสมัครต้องไม่น้อยกว่าวันเปิดรับสมัคร';
+        }
+
+        return '';
+    }
+
+    private function normalize_date($value)
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return NULL;
+        }
+
+        $timestamp = strtotime($value);
+
+        return $timestamp ? date('Y-m-d', $timestamp) : NULL;
+    }
+
+    private function normalize_time($value)
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return NULL;
+        }
+
+        $timestamp = strtotime($value);
+
+        return $timestamp ? date('H:i:s', $timestamp) : NULL;
+    }
+
+    private function normalize_datetime($value)
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return NULL;
+        }
+
+        $timestamp = strtotime(str_replace('T', ' ', $value));
+
+        return $timestamp ? date('Y-m-d H:i:s', $timestamp) : NULL;
+    }
+}

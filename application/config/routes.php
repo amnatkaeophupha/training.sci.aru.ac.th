@@ -70,6 +70,10 @@ $route['admin/courses'] = 'admin/courses/index';
 $route['admin/courses/store'] = 'admin/courses/store';
 $route['admin/courses/update/(:num)'] = 'admin/courses/update/$1';
 $route['admin/courses/delete/(:num)'] = 'admin/courses/delete/$1';
+$route['admin/batches'] = 'admin/batches/index';
+$route['admin/batches/store'] = 'admin/batches/store';
+$route['admin/batches/update/(:num)'] = 'admin/batches/update/$1';
+$route['admin/batches/delete/(:num)'] = 'admin/batches/delete/$1';
 $route['admin/logout'] = 'admin/auth/logout';
 /*
 

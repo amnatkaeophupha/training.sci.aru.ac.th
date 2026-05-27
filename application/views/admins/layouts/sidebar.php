@@ -27,7 +27,7 @@ $current_uri = $this->uri->uri_string();
                     <a class="nav-link admin-submenu__link <?= strpos($current_uri, 'admin/categories') === 0 ? 'active' : ''; ?>" href="<?= site_url('admin/categories'); ?>">หมวดหมู่หลักสูตร</a>
                     <a class="nav-link admin-submenu__link <?= strpos($current_uri, 'admin/courses') === 0 ? 'active' : ''; ?>" href="<?= site_url('admin/courses'); ?>">หลักสูตร</a>
                 </div>
-                <a class="nav-link" href="#">จัดการรุ่นอบรม</a>
+                <a class="nav-link <?= strpos($current_uri, 'admin/batches') === 0 ? 'active' : ''; ?>" href="<?= site_url('admin/batches'); ?>">จัดการรุ่นอบรม</a>
                 <a class="nav-link" href="#">จัดการผู้ลงทะเบียน</a>
                 <a class="nav-link" href="#">จัดการวิทยากร</a>
                 <a class="nav-link" href="#">จัดการเอกสาร</a>

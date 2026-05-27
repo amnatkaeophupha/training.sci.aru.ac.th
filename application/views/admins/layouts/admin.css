@@ -254,6 +254,21 @@ a:focus {
     background: #f8fafc;
 }
 
+.admin-batches-table {
+    --bs-table-bg: #f7fbff;
+    --bs-table-striped-bg: #eef6ff;
+    --bs-table-hover-bg: #e8f2ff;
+}
+
+.admin-batches-table thead th {
+    color: #173f63;
+    background: #dcecff;
+}
+
+.admin-batches-table tbody tr:nth-child(even) > * {
+    background: #f0f7ff;
+}
+
 .btn {
     font-weight: 700;
 }
