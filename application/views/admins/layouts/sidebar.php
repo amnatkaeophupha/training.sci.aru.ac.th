@@ -26,7 +26,7 @@ $current_uri = $this->uri->uri_string();
                 <a class="nav-link <?= strpos($current_uri, 'admin/batches') === 0 ? 'active' : ''; ?>" href="<?= site_url('admin/batches'); ?>">จัดการรุ่นอบรม</a>
                 <a class="nav-link" href="#">จัดการผู้ลงทะเบียน</a>
                 <a class="nav-link <?= strpos($current_uri, 'admin/instructors') === 0 ? 'active' : ''; ?>" href="<?= site_url('admin/instructors'); ?>">จัดการวิทยากร</a>
-                <a class="nav-link" href="#">จัดการเอกสาร</a>
+                <a class="nav-link <?= strpos($current_uri, 'admin/documents') === 0 ? 'active' : ''; ?>" href="<?= site_url('admin/documents'); ?>">จัดการเอกสาร</a>
                 <a class="nav-link" href="#">รายงาน</a>
                 <a class="nav-link admin-menu__logout mt-2" href="<?= site_url('admin/logout'); ?>">ออกจากระบบ</a>
             </nav>

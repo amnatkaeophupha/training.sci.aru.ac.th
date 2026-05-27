@@ -86,6 +86,10 @@ $route['admin/instructors'] = 'admin/instructors/index';
 $route['admin/instructors/store'] = 'admin/instructors/store';
 $route['admin/instructors/update/(:num)'] = 'admin/instructors/update/$1';
 $route['admin/instructors/delete/(:num)'] = 'admin/instructors/delete/$1';
+$route['admin/documents'] = 'admin/documents/index';
+$route['admin/documents/store'] = 'admin/documents/store';
+$route['admin/documents/update/(:num)'] = 'admin/documents/update/$1';
+$route['admin/documents/delete/(:num)'] = 'admin/documents/delete/$1';
 $route['admin/logout'] = 'admin/auth/logout';
 /*
 
