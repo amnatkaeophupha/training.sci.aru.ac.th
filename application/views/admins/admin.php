@@ -41,7 +41,7 @@ $status_labels = array(
             <header class="admin-topbar d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-3 px-lg-4 py-3 border-bottom">
                 <div>
                     <h1 class="h4 mb-1">รายงานผู้ดูแลระบบ</h1>
-                    <p class="mb-0 text-secondary fw-semibold">จัดการบัญชีผู้ดูแลระบบและสิทธิ์การใช้งาน</p>
+                    <p class="mb-0 text-secondary">จัดการบัญชีผู้ดูแลระบบและสิทธิ์การใช้งาน</p>
                 </div>
                 <div class="d-flex flex-wrap gap-2">
                     <?php if ($is_edit): ?>

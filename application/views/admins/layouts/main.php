@@ -6,7 +6,7 @@ $admin_role = $this->session->userdata('admin_role') ?: 'Administrator';
             <header class="admin-topbar d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-3 px-lg-4 py-3 border-bottom">
                 <div>
                     <h1 class="h4 mb-1">แดชบอร์ดผู้ดูแลระบบ</h1>
-                    <p class="mb-0 text-secondary fw-semibold">ภาพรวมการจัดการข้อมูลการอบรม</p>
+                    <p class="mb-0 text-secondary">ภาพรวมการจัดการข้อมูลการอบรม</p>
                 </div>
                 <a class="btn btn-dark" href="<?= site_url('admin/logout'); ?>">ออกจากระบบ</a>
             </header>

@@ -22,7 +22,11 @@ $current_uri = $this->uri->uri_string();
             <nav class="admin-menu nav nav-pills flex-column gap-2">
                 <a class="nav-link <?= $current_uri === 'admin/dashboard' ? 'active' : ''; ?>" href="<?= site_url('admin/dashboard'); ?>">Dashboard</a>
                 <a class="nav-link <?= strpos($current_uri, 'admin/admins') === 0 ? 'active' : ''; ?>" href="<?= site_url('admin/admins'); ?>">จัดการผู้ดูแลระบบ</a>
-                <a class="nav-link" href="#">จัดการหลักสูตรอบรม</a>
+                <a class="nav-link <?= (strpos($current_uri, 'admin/categories') === 0 || strpos($current_uri, 'admin/courses') === 0) ? 'active' : ''; ?>" href="#">จัดการหลักสูตรอบรม</a>
+                <div class="admin-submenu nav flex-column">
+                    <a class="nav-link admin-submenu__link <?= strpos($current_uri, 'admin/categories') === 0 ? 'active' : ''; ?>" href="<?= site_url('admin/categories'); ?>">หมวดหมู่หลักสูตร</a>
+                    <a class="nav-link admin-submenu__link <?= strpos($current_uri, 'admin/courses') === 0 ? 'active' : ''; ?>" href="<?= site_url('admin/courses'); ?>">หลักสูตร</a>
+                </div>
                 <a class="nav-link" href="#">จัดการรุ่นอบรม</a>
                 <a class="nav-link" href="#">จัดการผู้ลงทะเบียน</a>
                 <a class="nav-link" href="#">จัดการวิทยากร</a>
