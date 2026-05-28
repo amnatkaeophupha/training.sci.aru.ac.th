@@ -23,14 +23,19 @@ class Home extends CI_Controller {
 	 * @var Document_model
 	 */
 	public $Document_model;
+	/**
+	 * @var Instructor_model
+	 */
+	public $Instructor_model;
 
 	public function index()
 	{
 		//echo password_hash('123456', PASSWORD_DEFAULT);
 		$this->load->model('Course_model');
+		$this->load->model('Batch_model');
 
 		$this->load->view('frontend/home', array(
-			'featured_courses' => $this->Course_model->get_featured_for_frontend(6),
+			'featured_courses' => $this->Batch_model->get_frontend_programs(6),
 			'hero_stats' => $this->Course_model->get_frontend_stats()
 		));
 	}
@@ -62,5 +67,33 @@ class Home extends CI_Controller {
 			'instructors' => $this->Course_instructor_model->get_by_course($course->id),
 			'documents' => $this->Document_model->get_public_by_course($course->id)
 		));
+	}
+
+	public function instructors()
+	{
+		$this->load->model('Instructor_model');
+
+		$this->load->view('frontend/instructors', array(
+			'instructors' => $this->Instructor_model->get_active()
+		));
+	}
+
+	public function calendar()
+	{
+		$this->load->model('Batch_model');
+
+		$this->load->view('frontend/calendar', array(
+			'batches' => $this->Batch_model->get_frontend_calendar()
+		));
+	}
+
+	public function contact()
+	{
+		$this->load->view('frontend/contact');
+	}
+
+	public function faq()
+	{
+		$this->load->view('frontend/faq');
 	}
 }

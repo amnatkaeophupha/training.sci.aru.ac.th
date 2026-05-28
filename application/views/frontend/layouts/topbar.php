@@ -6,6 +6,6 @@
 				<a href="#">คลังความรู้</a>
 				<a href="#">ติดต่อคณะ</a>
 			</div>
-			<div class="topbar__contact">training@sci.aru.ac.th | 0 3527 6555</div>
+			<div class="topbar__contact">training@sci.aru.ac.th | <a href="<?php echo base_url('index.php/admin'); ?>"">Admin</a></div>
 		</div>
 	</div>

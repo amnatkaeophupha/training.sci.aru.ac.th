@@ -22,6 +22,7 @@ $stats = array_merge(
         'total' => 0,
         'open' => 0,
         'closed' => 0,
+        'additional_open' => 0,
         'cancelled' => 0
     ),
     isset($stats) && is_array($stats) ? $stats : array()
@@ -34,12 +35,14 @@ $form_action = $is_edit
 $status_labels = array(
     1 => 'เปิดรับสมัคร',
     2 => 'ปิดรับสมัคร',
-    3 => 'ยกเลิก'
+    3 => 'เปิดรับเพิ่ม',
+    4 => 'ยกเลิก'
 );
 $status_classes = array(
     1 => 'text-bg-success',
     2 => 'text-bg-secondary',
-    3 => 'text-bg-danger'
+    3 => 'text-bg-warning',
+    4 => 'text-bg-danger'
 );
 $start_time_value = !empty($edit_batch->start_time) ? date('H:i', strtotime($edit_batch->start_time)) : '';
 $end_time_value = !empty($edit_batch->end_time) ? date('H:i', strtotime($edit_batch->end_time)) : '';
@@ -75,7 +78,7 @@ $registration_end_value = !empty($edit_batch->registration_end) ? date('Y-m-d\TH
                     </div>
                 <?php endif; ?>
 
-                <section class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-3 mb-4" aria-label="สรุปรุ่นอบรม">
+                <section class="row row-cols-1 row-cols-md-2 row-cols-xl-5 g-3 mb-4" aria-label="สรุปรุ่นอบรม">
                     <div class="col">
                         <article class="admin-stat-card card h-100 border-0 shadow-sm position-relative">
                             <div class="card-body">
@@ -100,6 +103,15 @@ $registration_end_value = !empty($edit_batch->registration_end) ? date('Y-m-d\TH
                                 <span class="text-secondary small fw-bold">ปิดรับสมัคร</span>
                                 <strong class="d-block fs-2 lh-1 my-2"><?= number_format((int) $stats['closed']); ?></strong>
                                 <p class="mb-0 text-secondary small">สิ้นสุดการรับสมัคร</p>
+                            </div>
+                        </article>
+                    </div>
+                    <div class="col">
+                        <article class="admin-stat-card stat-yellow card h-100 border-0 shadow-sm position-relative">
+                            <div class="card-body">
+                                <span class="text-secondary small fw-bold">เปิดรับเพิ่ม</span>
+                                <strong class="d-block fs-2 lh-1 my-2"><?= number_format((int) $stats['additional_open']); ?></strong>
+                                <p class="mb-0 text-secondary small">เปิดรับสมัครเพิ่มเติม</p>
                             </div>
                         </article>
                     </div>

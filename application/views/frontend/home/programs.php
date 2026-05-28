@@ -7,6 +7,13 @@ $type_labels = array(
 	'hybrid' => 'Hybrid'
 );
 
+$batch_status_labels = array(
+	1 => 'เปิดรับสมัคร',
+	2 => 'ปิดรับสมัคร',
+	3 => 'เปิดรับเพิ่ม',
+	4 => 'ยกเลิก'
+);
+
 $format_course_date = function ($start_date, $end_date = NULL) {
 	if (empty($start_date)) {
 		return 'รอประกาศ';
@@ -58,10 +65,10 @@ $format_course_date = function ($start_date, $end_date = NULL) {
 
 			<div class="section__head">
 				<div>
-					<h3>โปรแกรมการอบรมแนะนำ</h3>
-					<p>แสดงข้อมูลหลักสูตรจากฐานข้อมูล ทั้งหัวข้อ วันอบรม ระยะเวลา รูปแบบ และสถานะการรับสมัคร</p>
+					<h3>รายการหลักสูตรที่เปิดการอบรม</h3>
+					<p>แสดงรายการจากตารางรอบอบรม พร้อมข้อมูลหลักสูตร วันอบรม ระยะเวลา รูปแบบ และสถานะการรับสมัคร</p>
 				</div>
-				<a class="course__link" href="#">ดูปฏิทินอบรมทั้งหมด</a>
+				<a class="course__link" href="<?php echo base_url('index.php/home/calendar'); ?>">ดูปฏิทินอบรมทั้งหมด</a>
 			</div>
 
 			<?php if (!empty($featured_courses)): ?>
@@ -72,6 +79,9 @@ $format_course_date = function ($start_date, $end_date = NULL) {
 						$description = !empty($course->short_description) ? $course->short_description : $course->description;
 						$training_type = isset($type_labels[$course->training_type]) ? $type_labels[$course->training_type] : $course->training_type;
 						$capacity = !empty($course->capacity) ? 'รับ '.$course->capacity.' คน' : '';
+						$batch_status = isset($course->batch_status) && isset($batch_status_labels[(int) $course->batch_status]) ? $batch_status_labels[(int) $course->batch_status] : 'รอประกาศ';
+						$is_registration_open = isset($course->batch_status) && in_array((int) $course->batch_status, array(1, 3), TRUE);
+						$status_class = isset($course->batch_status) && (int) $course->batch_status === 3 ? 'course__status--additional' : 'course__status--open';
 						$start_date = isset($course->start_date) ? $course->start_date : NULL;
 						$end_date = isset($course->end_date) ? $course->end_date : NULL;
 						$cover_image = !empty($course->cover_image) ? $course->cover_image : '';
@@ -92,6 +102,9 @@ $format_course_date = function ($start_date, $end_date = NULL) {
 									<?php if (!empty($course->duration_text)): ?>
 										<span><?php echo html_escape($course->duration_text); ?></span>
 									<?php endif; ?>
+									<?php if (!empty($course->batch_no)): ?>
+										<span><?php echo html_escape($course->batch_no); ?></span>
+									<?php endif; ?>
 									<?php if (!empty($course->location)): ?>
 										<span><?php echo html_escape($course->location); ?></span>
 									<?php elseif (!empty($training_type)): ?>
@@ -103,7 +116,14 @@ $format_course_date = function ($start_date, $end_date = NULL) {
 								</div>
 								<div class="course__footer">
 									<span class="course__date"><?php echo html_escape($format_course_date($start_date, $end_date)); ?></span>
-									<a class="course__link" href="<?php echo $detail_url; ?>">รายละเอียด</a>
+									<div class="course__actions">
+										<a class="course__link" href="<?php echo $detail_url; ?>">รายละเอียด</a>
+										<?php if ($is_registration_open): ?>
+											<a class="course__status <?php echo $status_class; ?>" href="<?php echo $detail_url; ?>#register"><?php echo html_escape($batch_status); ?></a>
+										<?php else: ?>
+											<span class="course__status course__status--closed" aria-disabled="true"><?php echo html_escape($batch_status); ?></span>
+										<?php endif; ?>
+									</div>
 								</div>
 							</div>
 						</article>

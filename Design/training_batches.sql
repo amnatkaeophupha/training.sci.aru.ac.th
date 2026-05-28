@@ -20,7 +20,7 @@ CREATE TABLE training_batches (
 
     capacity INT DEFAULT 0 COMMENT 'จำนวนรับ',
 
-    status TINYINT DEFAULT 1,
+    status TINYINT DEFAULT 1 COMMENT '1=เปิดรับสมัคร, 2=ปิดรับสมัคร, 3=เปิดรับเพิ่ม, 4=ยกเลิก',
 
     created_at DATETIME NULL,
     updated_at DATETIME NULL,

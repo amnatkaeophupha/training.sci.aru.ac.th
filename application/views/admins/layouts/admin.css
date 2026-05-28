@@ -239,6 +239,10 @@ a:focus {
     background: var(--admin-green);
 }
 
+.admin-stat-card.stat-yellow::before {
+    background: #f0ad00;
+}
+
 .admin-stat-card.stat-red::before {
     background: var(--admin-red);
 }

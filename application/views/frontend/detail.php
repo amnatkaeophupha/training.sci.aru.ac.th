@@ -19,7 +19,8 @@ $type_labels = array(
 $status_labels = array(
 	1 => 'เปิดรับสมัคร',
 	2 => 'ปิดรับสมัคร',
-	3 => 'ยกเลิก'
+	3 => 'เปิดรับเพิ่ม',
+	4 => 'ยกเลิก'
 );
 
 $format_course_date = function ($start_date, $end_date = NULL) {
@@ -91,6 +92,8 @@ $training_type = isset($type_labels[$course->training_type]) ? $type_labels[$cou
 $capacity = $primary_batch && !empty($primary_batch->capacity) ? (int) $primary_batch->capacity : (int) $course->capacity;
 $fee_text = (float) $course->fee > 0 ? number_format((float) $course->fee).' บาท' : 'ไม่มีค่าใช้จ่าย';
 $batch_status = $primary_batch && isset($status_labels[(int) $primary_batch->status]) ? $status_labels[(int) $primary_batch->status] : 'รอประกาศ';
+$cover_image = !empty($course->cover_image) ? trim((string) $course->cover_image) : '';
+$cover_image_url = $cover_image !== '' && preg_match('#^https?://#i', $cover_image) ? $cover_image : base_url($cover_image);
 
 $this->load->view('frontend/layouts/header', array(
 	'page_title' => $course->title.' | คณะวิทยาศาสตร์และเทคโนโลยี',
@@ -117,6 +120,27 @@ $this->load->view('frontend/layouts/nav');
 					<a class="btn btn--light" href="<?php echo base_url('index.php#programs'); ?>">กลับรายการ</a>
 				</div>
 			</div>
+		</div>
+	</section>
+
+	<section class="detail-banner" aria-label="ภาพประกอบหลักสูตร">
+		<div class="section">
+			<figure class="detail-banner__frame<?php echo $cover_image !== '' ? ' detail-banner__frame--image' : ''; ?>">
+				<?php if ($cover_image !== ''): ?>
+					<img src="<?php echo html_escape($cover_image_url); ?>" alt="<?php echo html_escape($course->title); ?>" loading="eager" decoding="async">
+				<?php else: ?>
+					<div class="detail-banner__fallback">
+						<span><?php echo html_escape(!empty($course->category_name) ? $course->category_name : 'หลักสูตรอบรม'); ?></span>
+						<strong><?php echo html_escape($course->title); ?></strong>
+					</div>
+				<?php endif; ?>
+				<!-- <?php if ($cover_image !== ''): ?>
+					<figcaption>
+						<span><?php echo html_escape(!empty($course->category_name) ? $course->category_name : 'หลักสูตรอบรม'); ?></span>
+						<strong><?php echo html_escape($course->title); ?></strong>
+					</figcaption>
+				<?php endif; ?> -->
+			</figure>
 		</div>
 	</section>
 

@@ -10,7 +10,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  */
 class Batches extends CI_Controller
 {
-    private $statuses = array(1, 2, 3);
+    private $statuses = array(1, 2, 3, 4);
 
     public function __construct()
     {

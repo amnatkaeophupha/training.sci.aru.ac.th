@@ -39,7 +39,7 @@ class Course_model extends CI_Model
                         SELECT b.id
                         FROM training_batches AS b
                         WHERE b.course_id = training_courses.id
-                            AND b.status = 1
+                            AND b.status IN (1, 3)
                         ORDER BY IFNULL(b.start_date, "9999-12-31") ASC, b.id ASC
                         LIMIT 1
                     )',
@@ -81,7 +81,7 @@ class Course_model extends CI_Model
 
         if ($this->db->table_exists('training_batches')) {
             $stats['open_batches'] = (int) $this->db
-                ->where('status', 1)
+                ->where_in('status', array(1, 3))
                 ->count_all_results('training_batches');
         }
 
