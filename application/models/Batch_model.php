@@ -27,6 +27,17 @@ class Batch_model extends CI_Model
             ->row();
     }
 
+    public function get_open_by_course($course_id)
+    {
+        return $this->db
+            ->where('course_id', (int) $course_id)
+            ->where('status', 1)
+            ->order_by('start_date', 'ASC')
+            ->order_by('id', 'ASC')
+            ->get($this->table)
+            ->result();
+    }
+
     public function create_batch($data)
     {
         $now = date('Y-m-d H:i:s');

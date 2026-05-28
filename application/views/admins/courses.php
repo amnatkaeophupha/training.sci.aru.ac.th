@@ -211,7 +211,7 @@ if (!empty($edit_course->published_at)) {
                 <div class="modal fade" id="courseFormModal" tabindex="-1" aria-labelledby="courseFormModalLabel" aria-hidden="true">
                     <div class="modal-dialog modal-xl">
                         <div class="modal-content">
-                            <form class="d-flex flex-column" method="post" action="<?= $form_action; ?>">
+                            <form class="d-flex flex-column" method="post" action="<?= $form_action; ?>" enctype="multipart/form-data">
                                 <div class="modal-header bg-primary text-white">
                                     <h2 class="modal-title h5" id="courseFormModalLabel"><?= $is_edit ? 'แก้ไขหลักสูตร' : 'เพิ่มหลักสูตร'; ?></h2>
                                     <a class="btn-close" href="<?= site_url('admin/courses'); ?>" aria-label="Close"></a>
@@ -243,8 +243,15 @@ if (!empty($edit_course->published_at)) {
                                         </div>
 
                                         <div class="col-md-6">
-                                            <label class="form-label fw-bold" for="cover_image">รูปภาพปก</label>
-                                            <input class="form-control" id="cover_image" type="text" name="cover_image" value="<?= $is_edit ? html_escape($edit_course->cover_image) : ''; ?>" placeholder="uploads/courses/example.jpg">
+                                            <label class="form-label fw-bold" for="cover_image">รูปภาพปก 1140 x 420 px</label>
+                                            <input class="form-control" id="cover_image" type="file" name="cover_image" accept="image/jpeg,image/png,image/gif,image/webp">
+                                            <?php if ($is_edit && !empty($edit_course->cover_image)): ?>
+                                                <div class="d-flex align-items-center gap-3 mt-2">
+                                                    <img class="rounded object-fit-cover" src="<?= base_url($edit_course->cover_image); ?>" alt="<?= html_escape($edit_course->title); ?>" width="96" height="54">
+                                                    <span class="small text-secondary">เลือกรูปใหม่เพื่อแทนที่รูปเดิม</span>
+                                                </div>
+                                            <?php endif; ?>
+                                            <div class="form-text">แนะนำขนาด 1140 x 420 px รองรับ JPG, PNG, GIF, WEBP ไม่เกิน 4MB</div>
                                         </div>
 
                                         <div class="col-12">
@@ -257,12 +264,12 @@ if (!empty($edit_course->published_at)) {
                                             <textarea class="form-control" id="description" name="description" rows="3"><?= $is_edit ? html_escape($edit_course->description) : ''; ?></textarea>
                                         </div>
 
-                                        <div class="col-md-6">
+                                        <div class="col-12 col-md-6 col-xl-3">
                                             <label class="form-label fw-bold" for="level">ระดับหลักสูตร</label>
                                             <input class="form-control" id="level" type="text" name="level" value="<?= $is_edit ? html_escape($edit_course->level) : ''; ?>" placeholder="เริ่มต้น / กลาง / สูง">
                                         </div>
 
-                                        <div class="col-md-6">
+                                        <div class="col-12 col-md-6 col-xl-3">
                                             <label class="form-label fw-bold" for="training_type">รูปแบบอบรม</label>
                                             <select class="form-select" id="training_type" name="training_type">
                                                 <?php foreach ($type_labels as $value => $label): ?>
@@ -273,27 +280,27 @@ if (!empty($edit_course->published_at)) {
                                             </select>
                                         </div>
 
-                                        <div class="col-md-6">
+                                        <div class="col-12 col-md-6 col-xl-6">
                                             <label class="form-label fw-bold" for="location">สถานที่อบรม</label>
                                             <input class="form-control" id="location" type="text" name="location" value="<?= $is_edit ? html_escape($edit_course->location) : ''; ?>">
                                         </div>
 
-                                        <div class="col-md-6">
+                                        <div class="col-12 col-md-6 col-xl-3">
                                             <label class="form-label fw-bold" for="duration_text">ระยะเวลา</label>
                                             <input class="form-control" id="duration_text" type="text" name="duration_text" value="<?= $is_edit ? html_escape($edit_course->duration_text) : ''; ?>" placeholder="เช่น 2 วัน">
                                         </div>
 
-                                        <div class="col-md-6">
+                                        <div class="col-12 col-md-6 col-xl-3">
                                             <label class="form-label fw-bold" for="capacity">จำนวนรับ</label>
                                             <input class="form-control" id="capacity" type="number" name="capacity" value="<?= (int) $edit_course->capacity; ?>" min="0">
                                         </div>
 
-                                        <div class="col-md-6">
+                                        <div class="col-12 col-md-6 col-xl-3">
                                             <label class="form-label fw-bold" for="fee">ค่าสมัคร</label>
                                             <input class="form-control" id="fee" type="number" name="fee" value="<?= html_escape((string) $edit_course->fee); ?>" min="0" step="0.01">
                                         </div>
 
-                                        <div class="col-md-6">
+                                        <div class="col-12 col-md-6 col-xl-3">
                                             <label class="form-label fw-bold" for="status">สถานะ</label>
                                             <select class="form-select" id="status" name="status">
                                                 <?php foreach ($status_labels as $value => $label): ?>
@@ -304,7 +311,7 @@ if (!empty($edit_course->published_at)) {
                                             </select>
                                         </div>
 
-                                        <div class="col-md-6">
+                                        <div class="col-12 col-md-6 col-xl-3">
                                             <label class="form-label fw-bold" for="is_featured">แสดงหน้าแรก</label>
                                             <select class="form-select" id="is_featured" name="is_featured">
                                                 <option value="0" <?= (int) $edit_course->is_featured === 0 ? 'selected' : ''; ?>>ไม่แสดง</option>
@@ -312,7 +319,7 @@ if (!empty($edit_course->published_at)) {
                                             </select>
                                         </div>
 
-                                        <div class="col-md-6">
+                                        <div class="col-12 col-md-6 col-xl-3">
                                             <label class="form-label fw-bold" for="published_at">วันที่เผยแพร่</label>
                                             <input class="form-control" id="published_at" type="datetime-local" name="published_at" value="<?= html_escape($published_value); ?>">
                                         </div>

@@ -423,13 +423,30 @@
 
 		.course__media {
 			position: relative;
+			height: 142px;
 			min-height: 142px;
+			aspect-ratio: 1140 / 420;
+			overflow: hidden;
 			background:
 				linear-gradient(135deg, rgba(255, 139, 3, .88), rgba(255, 139, 3, .35)),
 				linear-gradient(90deg, rgba(255, 255, 255, .5) 1px, transparent 1px),
 				linear-gradient(0deg, rgba(255, 255, 255, .5) 1px, transparent 1px),
 				#fff4e5;
 			background-size: auto, 28px 28px, 28px 28px, auto;
+		}
+
+		.course__image {
+			position: absolute;
+			inset: 0;
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			display: block;
+		}
+
+		.course__media--image::before,
+		.course__media--image::after {
+			display: none;
 		}
 
 		.course__media::before,

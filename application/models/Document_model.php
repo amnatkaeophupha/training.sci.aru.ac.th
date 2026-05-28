@@ -27,6 +27,17 @@ class Document_model extends CI_Model
             ->row();
     }
 
+    public function get_public_by_course($course_id)
+    {
+        return $this->db
+            ->where('course_id', (int) $course_id)
+            ->where('is_public', 1)
+            ->order_by('sort_order', 'ASC')
+            ->order_by('id', 'DESC')
+            ->get($this->table)
+            ->result();
+    }
+
     public function create_document($data)
     {
         $now = date('Y-m-d H:i:s');

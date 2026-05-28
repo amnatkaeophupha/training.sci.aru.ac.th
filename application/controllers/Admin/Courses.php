@@ -5,6 +5,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * @property CI_Input $input
  * @property CI_Loader $load
  * @property CI_Session $session
+ * @property CI_Upload $upload
  * @property Course_model $Course_model
  * @property Category_model $Category_model
  */
@@ -51,6 +52,14 @@ class Courses extends CI_Controller
             return;
         }
 
+        $error = $this->upload_cover_image($data);
+
+        if ($error !== '') {
+            $this->session->set_flashdata('error', $error);
+            redirect('admin/courses');
+            return;
+        }
+
         $this->Course_model->create_course($data);
         $this->session->set_flashdata('success', 'เพิ่มหลักสูตรเรียบร้อยแล้ว');
         redirect('admin/courses');
@@ -66,8 +75,16 @@ class Courses extends CI_Controller
             return;
         }
 
-        $data = $this->get_post_data();
+        $data = $this->get_post_data($course->cover_image);
         $error = $this->validate_course($data, $id);
+
+        if ($error !== '') {
+            $this->session->set_flashdata('error', $error);
+            redirect('admin/courses?edit='.(int) $id);
+            return;
+        }
+
+        $error = $this->upload_cover_image($data);
 
         if ($error !== '') {
             $this->session->set_flashdata('error', $error);
@@ -95,7 +112,7 @@ class Courses extends CI_Controller
         redirect('admin/courses');
     }
 
-    private function get_post_data()
+    private function get_post_data($current_cover_image = '')
     {
         $title = trim((string) $this->input->post('title', TRUE));
         $slug = trim((string) $this->input->post('slug', TRUE));
@@ -107,7 +124,7 @@ class Courses extends CI_Controller
             'slug' => $slug,
             'short_description' => trim((string) $this->input->post('short_description', TRUE)),
             'description' => trim((string) $this->input->post('description', TRUE)),
-            'cover_image' => trim((string) $this->input->post('cover_image', TRUE)),
+            'cover_image' => trim((string) $current_cover_image),
             'level' => trim((string) $this->input->post('level', TRUE)),
             'training_type' => (string) $this->input->post('training_type', TRUE),
             'location' => trim((string) $this->input->post('location', TRUE)),
@@ -118,6 +135,38 @@ class Courses extends CI_Controller
             'is_featured' => $this->input->post('is_featured', TRUE) === '1' ? 1 : 0,
             'published_at' => $this->normalize_datetime($this->input->post('published_at', TRUE))
         );
+    }
+
+    private function upload_cover_image(&$data)
+    {
+        if (empty($_FILES['cover_image']['name'])) {
+            return '';
+        }
+
+        $upload_path = FCPATH.'uploads/courses/';
+
+        if (!is_dir($upload_path) && !mkdir($upload_path, 0755, TRUE)) {
+            return 'ไม่สามารถสร้างโฟลเดอร์สำหรับอัปโหลดรูปภาพปกได้';
+        }
+
+        $config = array(
+            'upload_path' => $upload_path,
+            'allowed_types' => 'jpg|jpeg|png|gif|webp',
+            'max_size' => 4096,
+            'encrypt_name' => TRUE
+        );
+
+        $this->load->library('upload');
+        $this->upload->initialize($config);
+
+        if (!$this->upload->do_upload('cover_image')) {
+            return strip_tags($this->upload->display_errors('', ''));
+        }
+
+        $upload_data = $this->upload->data();
+        $data['cover_image'] = 'uploads/courses/'.$upload_data['file_name'];
+
+        return '';
     }
 
     private function validate_course($data, $exclude_id = NULL)
