@@ -143,4 +143,26 @@ class Member_model extends CI_Model {
 				'updated_at' => date('Y-m-d H:i:s')
 			));
 	}
+
+	public function verify_password($id, $password)
+	{
+		$member = $this->find_by_id($id);
+
+		if (!$member || empty($member['password_hash']))
+		{
+			return FALSE;
+		}
+
+		return password_verify($password, $member['password_hash']);
+	}
+
+	public function update_password($id, $password)
+	{
+		return $this->db
+			->where('id', (int) $id)
+			->update($this->table, array(
+				'password_hash' => password_hash($password, PASSWORD_DEFAULT),
+				'updated_at' => date('Y-m-d H:i:s')
+			));
+	}
 }

@@ -91,6 +91,63 @@ class Dashboard extends CI_Controller {
 		$this->load->view('frontend/profile', $data);
 	}
 
+	public function change_password()
+	{
+		$session_member = $this->require_member();
+
+		if ($session_member === NULL) { return; }
+
+		$this->load->model('Member_model');
+
+		$member = $this->Member_model->find_by_id($session_member['id']);
+
+		if (!$member)
+		{
+			$this->session->unset_userdata('member');
+			redirect('auth/login');
+			return;
+		}
+
+		$data = array(
+			'error' => '',
+			'success' => $this->session->flashdata('success'),
+			'member' => $member
+		);
+
+		if ($this->input->method() === 'post')
+		{
+			$current_password = (string) $this->input->post('current_password', TRUE);
+			$new_password = (string) $this->input->post('new_password', TRUE);
+			$confirm_password = (string) $this->input->post('confirm_password', TRUE);
+
+			if ($current_password === '' || $new_password === '' || $confirm_password === '')
+			{
+				$data['error'] = 'กรุณากรอกข้อมูลให้ครบถ้วน';
+			}
+			elseif (!$this->Member_model->verify_password($member['id'], $current_password))
+			{
+				$data['error'] = 'รหัสผ่านเดิมไม่ถูกต้อง';
+			}
+			elseif (strlen($new_password) < 8)
+			{
+				$data['error'] = 'รหัสผ่านใหม่ต้องมีอย่างน้อย 8 ตัวอักษร';
+			}
+			elseif ($new_password !== $confirm_password)
+			{
+				$data['error'] = 'ยืนยันรหัสผ่านใหม่ไม่ตรงกัน';
+			}
+			else
+			{
+				$this->Member_model->update_password($member['id'], $new_password);
+				$this->session->set_flashdata('success', 'เปลี่ยนรหัสผ่านเรียบร้อยแล้ว');
+				redirect('dashboard/change_password');
+				return;
+			}
+		}
+
+		$this->load->view('frontend/change_password', $data);
+	}
+
 	public function courses()
 	{
 		$session_member = $this->require_member();

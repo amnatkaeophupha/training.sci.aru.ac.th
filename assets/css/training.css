@@ -1013,6 +1013,10 @@
 	height: 34px;
 }
 
+.page-profile .page-footer-spacer {
+	height: 36px;
+}
+
 .page-calendar .hero__inner {
 	align-items: center;
 	min-height: 360px;
@@ -2347,6 +2351,10 @@
 	}
 
 	.page-instructors .page-footer-spacer {
+		height: 24px;
+	}
+
+	.page-profile .page-footer-spacer {
 		height: 24px;
 	}
 

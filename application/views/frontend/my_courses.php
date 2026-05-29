@@ -161,8 +161,9 @@ $this->load->view('frontend/layouts/nav');
 
 				<nav class="profile-menu" aria-label="เมนูบัญชีสมาชิก">
 					<a href="<?php echo base_url('index.php/dashboard/profile'); ?>">บัญชีของฉัน</a>
-					<a class="is-active" href="<?php echo base_url('index.php/dashboard/courses'); ?>">หลักสูตรอบรม</a>
-					<a href="<?php echo base_url('index.php/home/calendar'); ?>">ปฏิทินอบรม</a>
+					<a href="<?php echo base_url('index.php/dashboard/change_password'); ?>">เปลี่ยนรหัสผ่าน</a>
+					<a class="is-active" href="<?php echo base_url('index.php/dashboard/courses'); ?>">หลักสูตรเข้าอบรม</a>
+					<a href="#">ประวัติการอบรม</a>
 					<a class="profile-menu__logout" href="<?php echo base_url('index.php/auth/logout'); ?>">ออกจากระบบ</a>
 				</nav>
 			</aside>
@@ -348,5 +349,7 @@ $this->load->view('frontend/layouts/nav');
 			</section>
 		</div>
 	</main>
+
+	<div class="page-footer-spacer" aria-hidden="true"></div>
 
 <?php $this->load->view('frontend/layouts/footer'); ?>
