@@ -23,7 +23,7 @@
 				<div class="login-card__head">
 					<p>กู้คืนบัญชีผู้ใช้งาน</p>
 					<h1>ลืมรหัสผ่าน?</h1>
-					<span class="login-help">กรอกอีเมลที่ใช้สมัครสมาชิก ระบบจะส่งขั้นตอนการตั้งรหัสผ่านใหม่ให้ท่าน</span>
+					<span class="login-help">กรอกอีเมลที่ใช้สมัครสมาชิก ระบบจะสร้างลิงก์สำหรับตั้งรหัสผ่านใหม่ โดยลิงก์มีอายุ 1 ชั่วโมง</span>
 				</div>
 
 				<?php if (!empty($error)): ?>
@@ -34,11 +34,19 @@
 					<div class="login-alert login-alert--success" role="status"><?php echo html_escape($success); ?></div>
 				<?php endif; ?>
 
+				<?php if (!empty($reset_link)): ?>
+					<div class="reset-link-box">
+						<strong>ลิงก์สำหรับตั้งรหัสผ่านใหม่</strong>
+						<p>ใช้ลิงก์นี้สำหรับส่งให้ผู้สมัคร หรือคัดลอกไปเปิดเพื่อตั้งรหัสผ่านใหม่</p>
+						<a href="<?php echo html_escape($reset_link); ?>"><?php echo html_escape($reset_link); ?></a>
+					</div>
+				<?php endif; ?>
+
 				<form class="login-form" action="<?php echo base_url('index.php/auth/forgot_password'); ?>" method="post">
 					<label class="required-label" for="email">อีเมลผู้ใช้งาน</label>
 					<input id="email" type="email" name="email" value="<?php echo html_escape($email); ?>" placeholder="name@example.com" autocomplete="email" required>
 
-					<button class="btn" type="submit">ส่งคำขอรีเซ็ตรหัสผ่าน</button>
+					<button class="btn" type="submit">ส่งคำขอตั้งรหัสผ่านใหม่</button>
 				</form>
 
 				<div class="auth-switch">

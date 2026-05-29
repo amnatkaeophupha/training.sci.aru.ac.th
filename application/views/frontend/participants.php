@@ -102,8 +102,7 @@ $format_time_range = function ($start_time, $end_time) {
 
 $this->load->view('frontend/layouts/header', array(
 	'page_title' => 'เพิ่มผู้เข้าอบรม | โปรแกรมการอบรม',
-	'body_class' => 'page-profile',
-	'extra_head' => '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">'
+	'body_class' => 'page-profile'
 ));
 $this->load->view('frontend/layouts/topbar');
 $this->load->view('frontend/layouts/site_header');
@@ -123,8 +122,9 @@ $this->load->view('frontend/layouts/nav');
 
 				<nav class="profile-menu" aria-label="เมนูบัญชีสมาชิก">
 					<a href="<?php echo base_url('index.php/dashboard/profile'); ?>">บัญชีของฉัน</a>
+					<a href="<?php echo base_url('index.php/dashboard/change_password'); ?>">เปลี่ยนรหัสผ่าน</a>
 					<a class="is-active" href="<?php echo base_url('index.php/dashboard/courses'); ?>">หลักสูตรเข้าอบรม</a>
-					<a href="<?php echo base_url('index.php/home/calendar'); ?>">ปฏิทินอบรม</a>
+					<!-- <a href="<?php echo base_url('index.php/home/calendar'); ?>">ปฏิทินอบรม</a> -->
 					<a class="profile-menu__logout" href="<?php echo base_url('index.php/auth/logout'); ?>">ออกจากระบบ</a>
 				</nav>
 			</aside>
@@ -292,8 +292,7 @@ $this->load->view('frontend/layouts/nav');
 	</main>
 
 <?php $this->load->view('frontend/layouts/footer', array(
-	'footer_scripts' => '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	'footer_scripts' => '<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.querySelectorAll(".participant-delete-form").forEach(function (form) {
 	form.addEventListener("submit", function (event) {

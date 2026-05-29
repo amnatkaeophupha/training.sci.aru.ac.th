@@ -20,6 +20,7 @@
 			© 2026 Science & Technology Training Center | สถิติเข้าชมเว็บไซต์ : 62,004 ครั้ง | วันนี้ : 74 ครั้ง
 		</div>
 	</footer>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 	<?php if (!empty($footer_scripts)): ?>
 		<?php echo $footer_scripts; ?>
 	<?php endif; ?>

@@ -161,6 +161,30 @@
 			box-shadow: none;
 		}
 
+		.btn--account {
+			background: #0d6efd;
+			color: #fff;
+			box-shadow: 0 8px 18px rgba(13, 110, 253, .22);
+		}
+
+		.btn--account:hover,
+		.btn--account:focus {
+			background: #0b5ed7;
+			color: #fff;
+		}
+
+		.btn--logout {
+			background: #dc3545;
+			color: #fff;
+			box-shadow: 0 8px 18px rgba(220, 53, 69, .18);
+		}
+
+		.btn--logout:hover,
+		.btn--logout:focus {
+			background: #bb2d3b;
+			color: #fff;
+		}
+
 		.nav {
 			position: sticky;
 			top: 0;
@@ -1680,6 +1704,23 @@
 	white-space: nowrap;
 }
 
+.member-course__cancel-form {
+	display: inline-flex;
+	margin: 0;
+}
+
+.member-course__cancel-btn {
+	background: #dc3545;
+	color: #fff;
+	box-shadow: 0 10px 18px rgba(220, 53, 69, .18);
+}
+
+.member-course__cancel-btn:hover,
+.member-course__cancel-btn:focus {
+	background: #bb2d3b;
+	color: #fff;
+}
+
 .member-course__participant-btn--full {
 	border-color: #e2e7ee;
 	background: #eef1f5;
@@ -2585,6 +2626,42 @@
 .auth-switch a {
 	color: var(--blue);
 	font-weight: 800;
+}
+
+.auth-switch--no-border {
+	margin-top: 0;
+	padding-top: 0;
+	border-top: 0;
+}
+
+.reset-link-box {
+	display: grid;
+	gap: 6px;
+	margin-bottom: 16px;
+	padding: 14px;
+	border: 1px solid #cfe4ff;
+	border-radius: var(--radius);
+	background: #f3f8ff;
+	color: var(--ink);
+}
+
+.reset-link-box strong {
+	color: var(--blue);
+	font-size: 15px;
+}
+
+.reset-link-box p {
+	margin: 0;
+	color: var(--muted);
+	font-size: 14px;
+	line-height: 1.45;
+}
+
+.reset-link-box a {
+	overflow-wrap: anywhere;
+	color: var(--primary-dark);
+	font-weight: 800;
+	line-height: 1.45;
 }
 
 .page-dashboard {

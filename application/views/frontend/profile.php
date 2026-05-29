@@ -29,7 +29,7 @@ $this->load->view('frontend/layouts/nav');
 					<a class="is-active" href="<?php echo base_url('index.php/dashboard/profile'); ?>">บัญชีของฉัน</a>
 					<a href="<?php echo base_url('index.php/dashboard/change_password'); ?>">เปลี่ยนรหัสผ่าน</a>
 					<a href="<?php echo base_url('index.php/dashboard/courses'); ?>">หลักสูตรเข้าอบรม</a>
-					<a href="#">ประวัติการอบรม</a>
+					<!-- <a href="#">ประวัติการอบรม</a> -->
 					<a class="profile-menu__logout" href="<?php echo base_url('index.php/auth/logout'); ?>">ออกจากระบบ</a>
 				</nav>
 			</aside>

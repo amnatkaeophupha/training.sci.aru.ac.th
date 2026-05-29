@@ -160,7 +160,8 @@ class Auth extends CI_Controller {
 		$data = array(
 			'error' => '',
 			'success' => '',
-			'email' => ''
+			'email' => '',
+			'reset_link' => ''
 		);
 
 		if ($this->input->method() === 'post')
@@ -173,13 +174,69 @@ class Auth extends CI_Controller {
 			{
 				$data['error'] = 'กรุณากรอกอีเมลที่ใช้สมัครสมาชิก';
 			}
+			elseif (! filter_var($email, FILTER_VALIDATE_EMAIL))
+			{
+				$data['error'] = 'รูปแบบอีเมลไม่ถูกต้อง';
+			}
 			else
 			{
-				$data['success'] = 'ระบบรับคำขอรีเซ็ตรหัสผ่านแล้ว กรุณาตรวจสอบอีเมลของท่าน';
+				$token = $this->Member_model->create_password_reset_token($email);
+
+				if ($token !== '')
+				{
+					$data['reset_link'] = base_url('index.php/auth/reset-password/'.$token);
+				}
+
+				$data['success'] = 'หากอีเมลนี้อยู่ในระบบ เราได้เตรียมลิงก์สำหรับตั้งรหัสผ่านใหม่แล้ว';
 			}
 		}
 
 		$this->load->view('frontend/forgot_password', $data);
+	}
+
+	public function reset_password($token = '')
+	{
+		$member = $this->Member_model->find_by_password_reset_token($token);
+		$data = array(
+			'error' => '',
+			'token' => $token,
+			'is_valid_token' => ! empty($member)
+		);
+
+		if (empty($member))
+		{
+			$data['error'] = 'ลิงก์ตั้งรหัสผ่านใหม่ไม่ถูกต้องหรือหมดอายุแล้ว';
+			$this->load->view('frontend/reset_password', $data);
+			return;
+		}
+
+		if ($this->input->method() === 'post')
+		{
+			$new_password = (string) $this->input->post('new_password', TRUE);
+			$confirm_password = (string) $this->input->post('confirm_password', TRUE);
+
+			if ($new_password === '' || $confirm_password === '')
+			{
+				$data['error'] = 'กรุณากรอกรหัสผ่านใหม่และยืนยันรหัสผ่าน';
+			}
+			elseif (strlen($new_password) < 8)
+			{
+				$data['error'] = 'รหัสผ่านใหม่ต้องมีอย่างน้อย 8 ตัวอักษร';
+			}
+			elseif ($new_password !== $confirm_password)
+			{
+				$data['error'] = 'รหัสผ่านใหม่และยืนยันรหัสผ่านไม่ตรงกัน';
+			}
+			else
+			{
+				$this->Member_model->update_password($member['id'], $new_password);
+				$this->session->set_flashdata('success', 'ตั้งรหัสผ่านใหม่สำเร็จ กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่');
+				redirect('auth/login');
+				return;
+			}
+		}
+
+		$this->load->view('frontend/reset_password', $data);
 	}
 
 	public function logout()

@@ -163,7 +163,7 @@ $this->load->view('frontend/layouts/nav');
 					<a href="<?php echo base_url('index.php/dashboard/profile'); ?>">บัญชีของฉัน</a>
 					<a href="<?php echo base_url('index.php/dashboard/change_password'); ?>">เปลี่ยนรหัสผ่าน</a>
 					<a class="is-active" href="<?php echo base_url('index.php/dashboard/courses'); ?>">หลักสูตรเข้าอบรม</a>
-					<a href="#">ประวัติการอบรม</a>
+					<!-- <a href="#">ประวัติการอบรม</a> -->
 					<a class="profile-menu__logout" href="<?php echo base_url('index.php/auth/logout'); ?>">ออกจากระบบ</a>
 				</nav>
 			</aside>
@@ -202,6 +202,8 @@ $this->load->view('frontend/layouts/nav');
 							$time_range = $format_time_range(isset($course->start_time) ? $course->start_time : '', isset($course->end_time) ? $course->end_time : '');
 							$detail_url = !$is_demo && !empty($course->slug) ? base_url('index.php/home/detail/'.$course->slug) : base_url('index.php#programs');
 							$participant_url = !$is_demo && !empty($course->registration_id) ? base_url('index.php/dashboard/participants/'.(int) $course->registration_id) : '#';
+							$cancel_url = !$is_demo && !empty($course->registration_id) ? base_url('index.php/dashboard/cancel-registration/'.(int) $course->registration_id) : '#';
+							$is_cancelled = $status === 4;
 							$cover_image = !empty($course->cover_image) ? $course->cover_image : '';
 							$cover_image_url = $cover_image !== '' && preg_match('#^https?://#i', $cover_image) ? $cover_image : ($cover_image !== '' ? base_url($cover_image) : '');
 							$participant_count = isset($course->participant_count) ? max(1, (int) $course->participant_count) : 1;
@@ -313,7 +315,7 @@ $this->load->view('frontend/layouts/nav');
 														<?php endforeach; ?>
 													</div>
 												<?php endif; ?>
-												<?php if ($payment_due_amount > 0): ?>
+												<?php if ($payment_due_amount > 0 && !$is_cancelled): ?>
 													<form method="post" action="<?php echo base_url('index.php/dashboard/payment-slip/'.(int) $course->registration_id); ?>" enctype="multipart/form-data">
 														<input type="file" name="payment_slip" accept=".jpg,.jpeg,.png,.pdf" required>
 														<button class="btn member-course__slip-btn" type="submit"><?php echo $payment_submitted_amount > 0 ? 'อัปโหลดสลิปเพิ่มเติม' : 'อัปโหลดสลิป'; ?></button>
@@ -328,12 +330,19 @@ $this->load->view('frontend/layouts/nav');
 									<div class="member-course__footer">
 										<span>เลขที่สมัคร: <?php echo html_escape($format_registration_code(isset($course->registration_code) ? $course->registration_code : '')); ?></span>
 										<div class="member-course__actions">
-											<?php if ($is_course_full): ?>
-												<span class="btn member-course__participant-btn member-course__participant-btn--full" aria-disabled="true">เต็ม</span>
+											<?php if ($is_cancelled): ?>
+												<span class="btn member-course__participant-btn member-course__participant-btn--full" aria-disabled="true">ยกเลิกแล้ว</span>
 											<?php else: ?>
-												<a class="btn member-course__participant-btn" href="<?php echo $participant_url; ?>">เพิ่มผู้เข้าอบรม</a>
+												<?php if ($is_course_full): ?>
+													<span class="btn member-course__participant-btn member-course__participant-btn--full" aria-disabled="true">เต็ม</span>
+												<?php else: ?>
+													<a class="btn member-course__participant-btn" href="<?php echo $participant_url; ?>">ผู้เข้าอบรม</a>
+												<?php endif; ?>
+												<form class="member-course__cancel-form js-cancel-registration" method="post" action="<?php echo $cancel_url; ?>">
+													<button class="btn member-course__participant-btn member-course__cancel-btn" type="submit">ยกเลิกการสมัคร</button>
+												</form>
 											<?php endif; ?>
-											<a class="course__link" href="<?php echo $detail_url; ?>">ดูรายละเอียด</a>
+											<!-- <a class="course__link" href="<?php echo $detail_url; ?>">ดูรายละเอียด</a> -->
 										</div>
 									</div>
 								</div>
@@ -352,4 +361,28 @@ $this->load->view('frontend/layouts/nav');
 
 	<div class="page-footer-spacer" aria-hidden="true"></div>
 
-<?php $this->load->view('frontend/layouts/footer'); ?>
+<?php $this->load->view('frontend/layouts/footer', array(
+	'footer_scripts' => '<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.querySelectorAll(".js-cancel-registration").forEach(function (form) {
+	form.addEventListener("submit", function (event) {
+		event.preventDefault();
+
+		Swal.fire({
+			title: "ยืนยันการยกเลิกการสมัคร?",
+			text: "หากยกเลิกแล้ว กรุณาตรวจสอบเงื่อนไขการคืนเงินหรือการเปลี่ยนแปลงกับเจ้าหน้าที่",
+			icon: "warning",
+			showCancelButton: true,
+			confirmButtonColor: "#dc3545",
+			cancelButtonColor: "#6c757d",
+			confirmButtonText: "ยืนยันยกเลิก",
+			cancelButtonText: "ไม่ยกเลิก"
+		}).then(function (result) {
+			if (result.isConfirmed) {
+				form.submit();
+			}
+		});
+	});
+});
+</script>'
+)); ?>

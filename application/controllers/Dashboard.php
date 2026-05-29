@@ -243,6 +243,13 @@ class Dashboard extends CI_Controller {
 			return;
 		}
 
+		if ((int) $registration->registration_status === 4)
+		{
+			$this->session->set_flashdata('error', 'รายการนี้ถูกยกเลิกแล้ว ไม่สามารถอัปโหลดสลิปได้');
+			redirect('dashboard/courses');
+			return;
+		}
+
 		if (!$this->Batch_model->payments_table_exists())
 		{
 			$this->session->set_flashdata('error', 'ยังไม่พบตารางการชำระเงิน กรุณารันไฟล์ Design/training_payments.sql ก่อน');
@@ -289,6 +296,52 @@ class Dashboard extends CI_Controller {
 		redirect('dashboard/courses');
 	}
 
+	public function cancel_registration($registration_id = 0)
+	{
+		$session_member = $this->require_member();
+
+		if ($session_member === NULL) { return; }
+
+		$this->load->model('Member_model');
+		$this->load->model('Batch_model');
+
+		$member = $this->Member_model->find_by_id($session_member['id']);
+
+		if (!$member)
+		{
+			$this->session->unset_userdata('member');
+			redirect('auth/login');
+			return;
+		}
+
+		if ($this->input->method() !== 'post')
+		{
+			redirect('dashboard/courses');
+			return;
+		}
+
+		$registration_id = (int) $registration_id;
+		$registration = $this->Batch_model->get_registration_by_member($registration_id, $member['id']);
+
+		if (!$registration)
+		{
+			$this->session->set_flashdata('error', 'ไม่พบรายการสมัครอบรมนี้');
+			redirect('dashboard/courses');
+			return;
+		}
+
+		if ((int) $registration->registration_status === 4)
+		{
+			$this->session->set_flashdata('error', 'รายการนี้ถูกยกเลิกแล้ว');
+			redirect('dashboard/courses');
+			return;
+		}
+
+		$this->Batch_model->cancel_registration_by_member($registration_id, $member['id']);
+		$this->session->set_flashdata('success', 'ยกเลิกการสมัครเรียบร้อยแล้ว ระบบยังเก็บประวัติ รายชื่อผู้เข้าอบรม และรายการชำระเงินไว้ หากมีการชำระเงินแล้วกรุณาติดต่อเจ้าหน้าที่เพื่อดำเนินการคืนเงิน');
+		redirect('dashboard/courses');
+	}
+
 	public function participants($registration_id = 0)
 	{
 		$session_member = $this->require_member();
@@ -313,6 +366,13 @@ class Dashboard extends CI_Controller {
 		if (!$registration)
 		{
 			$this->session->set_flashdata('error', 'ไม่พบรายการสมัครอบรมนี้');
+			redirect('dashboard/courses');
+			return;
+		}
+
+		if ((int) $registration->registration_status === 4)
+		{
+			$this->session->set_flashdata('error', 'รายการนี้ถูกยกเลิกแล้ว ไม่สามารถจัดการผู้เข้าอบรมได้');
 			redirect('dashboard/courses');
 			return;
 		}
