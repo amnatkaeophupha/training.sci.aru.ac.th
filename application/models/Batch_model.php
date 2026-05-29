@@ -183,7 +183,8 @@ class Batch_model extends CI_Model
             $course->payment_refund_amount = 0;
 
             if ($course->payment_total > 0 && !empty($course->registration_id)) {
-                $payment_summary = $this->get_registration_payment_summary($course->registration_id, $course->payment_total, TRUE);
+                $ensure_pending_payment = !isset($course->registration_status) || (int) $course->registration_status !== 4;
+                $payment_summary = $this->get_registration_payment_summary($course->registration_id, $course->payment_total, $ensure_pending_payment);
 
                 if ($payment_summary) {
                     $course->payment_id = (int) $payment_summary->payment_id;
@@ -296,19 +297,31 @@ class Batch_model extends CI_Model
         $refund_amount = max(0, $submitted_amount - $target_amount);
         $pending_payment = $this->get_pending_registration_payment($registration_id);
 
-        if ($ensure_pending && $due_amount > 0) {
-            if ($pending_payment) {
-                if (abs((float) $pending_payment->amount - $due_amount) >= 0.01) {
-                    $this->db
-                        ->where('id', (int) $pending_payment->id)
-                        ->update('training_payments', array(
-                            'amount' => $due_amount,
-                            'updated_at' => date('Y-m-d H:i:s')
-                        ));
-                    $pending_payment = $this->get_pending_registration_payment($registration_id);
+        if ($ensure_pending) {
+            if ($due_amount > 0) {
+                if ($pending_payment) {
+                    if (abs((float) $pending_payment->amount - $due_amount) >= 0.01) {
+                        $this->db
+                            ->where('id', (int) $pending_payment->id)
+                            ->update('training_payments', array(
+                                'amount' => $due_amount,
+                                'updated_at' => date('Y-m-d H:i:s')
+                            ));
+                        $pending_payment = $this->get_pending_registration_payment($registration_id);
+                    }
+                } else {
+                    $pending_payment = $this->create_registration_payment($registration_id, $due_amount);
                 }
-            } else {
-                $pending_payment = $this->create_registration_payment($registration_id, $due_amount);
+            } elseif ($pending_payment) {
+                $this->db
+                    ->where('registration_id', $registration_id)
+                    ->where('status', 1)
+                    ->group_start()
+                    ->where('payment_slip IS NULL', NULL, FALSE)
+                    ->or_where('payment_slip', '')
+                    ->group_end()
+                    ->delete('training_payments');
+                $pending_payment = NULL;
             }
         }
 
@@ -417,6 +430,34 @@ class Batch_model extends CI_Model
             ->limit(1)
             ->get()
             ->row();
+    }
+
+    public function cancel_registration_by_member($registration_id, $member_id)
+    {
+        if (!$this->registrations_table_exists()) {
+            return FALSE;
+        }
+
+        $updated = $this->db
+            ->where('id', (int) $registration_id)
+            ->where('member_id', (int) $member_id)
+            ->update('training_registrations', array(
+                'status' => 4,
+                'updated_at' => date('Y-m-d H:i:s')
+            ));
+
+        if ($updated && $this->payments_table_exists()) {
+            $this->db
+                ->where('registration_id', (int) $registration_id)
+                ->where('status', 1)
+                ->group_start()
+                ->where('payment_slip IS NULL', NULL, FALSE)
+                ->or_where('payment_slip', '')
+                ->group_end()
+                ->delete('training_payments');
+        }
+
+        return $updated;
     }
 
     public function registrations_table_exists()

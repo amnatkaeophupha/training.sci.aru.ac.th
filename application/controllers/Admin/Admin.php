@@ -21,6 +21,11 @@ class Admin extends CI_Controller
         if (!$this->session->userdata('admin_logged_in')) {
             redirect('admin');
         }
+
+        if ($this->session->userdata('admin_role') !== 'super_admin') {
+            $this->session->set_flashdata('error', 'คุณไม่มีสิทธิ์จัดการผู้ดูแลระบบ');
+            redirect('admin/dashboard');
+        }
     }
 
     public function index()
