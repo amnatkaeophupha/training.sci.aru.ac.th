@@ -57,6 +57,12 @@ $payment_classes = array(
 	4 => 'member-course__payment-status--rejected'
 );
 
+$payment_slip_status_labels = array(
+	2 => 'รอตรวจสอบสลิป',
+	3 => 'ชำระเงินแล้ว',
+	4 => 'ไม่ผ่านการตรวจสอบ'
+);
+
 $format_course_date = function ($start_date, $end_date = NULL) {
 	if (empty($start_date)) {
 		return 'รอประกาศ';
@@ -217,6 +223,7 @@ $this->load->view('frontend/layouts/nav');
 								$payment_class = 'member-course__payment-status--refund';
 							}
 							$payment_slip_url = !empty($course->payment_slip) ? base_url($course->payment_slip) : '';
+							$payment_slips = isset($course->payment_slips) && is_array($course->payment_slips) ? $course->payment_slips : array();
 							?>
 							<article class="member-course">
 								<div class="member-course__media">
@@ -289,12 +296,28 @@ $this->load->view('frontend/layouts/nav');
 													<span>สถานะชำระเงิน</span>
 													<strong class="member-course__payment-status <?php echo $payment_class; ?>"><?php echo html_escape($payment_label); ?></strong>
 												</div>
+												<?php if (!empty($payment_slips)): ?>
+													<div class="member-course__slip-list">
+														<span>รายการสลิปที่อัปโหลดแล้ว</span>
+														<?php foreach ($payment_slips as $slip_index => $slip): ?>
+															<?php
+															$slip_status = isset($slip->status) ? (int) $slip->status : 0;
+															$slip_label = isset($payment_slip_status_labels[$slip_status]) ? $payment_slip_status_labels[$slip_status] : 'อัปโหลดแล้ว';
+															$slip_url = !empty($slip->payment_slip) ? base_url($slip->payment_slip) : '';
+															?>
+															<a href="<?php echo $slip_url; ?>" target="_blank" rel="noopener">
+																<strong>สลิปครั้งที่ <?php echo number_format($slip_index + 1); ?></strong>
+																<small><?php echo html_escape($format_money(isset($slip->amount) ? $slip->amount : 0)); ?> · <?php echo html_escape($slip_label); ?></small>
+															</a>
+														<?php endforeach; ?>
+													</div>
+												<?php endif; ?>
 												<?php if ($payment_due_amount > 0): ?>
 													<form method="post" action="<?php echo base_url('index.php/dashboard/payment-slip/'.(int) $course->registration_id); ?>" enctype="multipart/form-data">
 														<input type="file" name="payment_slip" accept=".jpg,.jpeg,.png,.pdf" required>
 														<button class="btn member-course__slip-btn" type="submit"><?php echo $payment_submitted_amount > 0 ? 'อัปโหลดสลิปเพิ่มเติม' : 'อัปโหลดสลิป'; ?></button>
 													</form>
-												<?php elseif ($payment_slip_url !== ''): ?>
+												<?php elseif (empty($payment_slips) && $payment_slip_url !== ''): ?>
 													<a class="course__link" href="<?php echo $payment_slip_url; ?>" target="_blank" rel="noopener">ดูสลิปที่อัปโหลด</a>
 												<?php endif; ?>
 											</div>

@@ -177,6 +177,7 @@ class Batch_model extends CI_Model
             $course->payment_code = '';
             $course->payment_status = 0;
             $course->payment_slip = '';
+            $course->payment_slips = array();
             $course->payment_submitted_amount = 0;
             $course->payment_due_amount = $course->payment_total;
             $course->payment_refund_amount = 0;
@@ -189,6 +190,7 @@ class Batch_model extends CI_Model
                     $course->payment_code = $payment_summary->payment_code;
                     $course->payment_status = (int) $payment_summary->payment_status;
                     $course->payment_slip = $payment_summary->payment_slip;
+                    $course->payment_slips = $payment_summary->payment_slips;
                     $course->payment_submitted_amount = (float) $payment_summary->submitted_amount;
                     $course->payment_due_amount = (float) $payment_summary->due_amount;
                     $course->payment_refund_amount = (float) $payment_summary->refund_amount;
@@ -267,6 +269,7 @@ class Batch_model extends CI_Model
         $submitted_amount = 0;
         $latest_submitted = NULL;
         $latest_slip = NULL;
+        $payment_slips = array();
 
         foreach ($payments as $payment) {
             $status = (int) $payment->status;
@@ -278,6 +281,14 @@ class Batch_model extends CI_Model
 
             if (!empty($payment->payment_slip) && $status !== 1) {
                 $latest_slip = $payment;
+                $payment_slips[] = (object) array(
+                    'id' => (int) $payment->id,
+                    'payment_code' => $payment->payment_code,
+                    'amount' => (float) $payment->amount,
+                    'status' => $status,
+                    'payment_slip' => $payment->payment_slip,
+                    'paid_at' => isset($payment->paid_at) ? $payment->paid_at : ''
+                );
             }
         }
 
@@ -316,6 +327,7 @@ class Batch_model extends CI_Model
         $summary->payment_code = $display_payment ? $display_payment->payment_code : '';
         $summary->payment_status = $due_amount > 0 ? 1 : ($latest_submitted ? (int) $latest_submitted->status : 0);
         $summary->payment_slip = $latest_slip ? $latest_slip->payment_slip : '';
+        $summary->payment_slips = $payment_slips;
 
         return $summary;
     }
