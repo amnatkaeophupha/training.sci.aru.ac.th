@@ -1,5 +1,9 @@
 <?php
 $featured_courses = isset($featured_courses) && is_array($featured_courses) ? $featured_courses : array();
+$member = $this->session->userdata('member');
+$registration_url = is_array($member) && !empty($member['id'])
+	? base_url('index.php/dashboard/courses')
+	: base_url('index.php/auth/login');
 
 $type_labels = array(
 	'online' => 'ออนไลน์',
@@ -79,14 +83,25 @@ $format_course_date = function ($start_date, $end_date = NULL) {
 						$description = !empty($course->short_description) ? $course->short_description : $course->description;
 						$training_type = isset($type_labels[$course->training_type]) ? $type_labels[$course->training_type] : $course->training_type;
 						$capacity = !empty($course->capacity) ? 'รับ '.$course->capacity.' คน' : '';
+						$capacity_number = isset($course->capacity) ? (int) $course->capacity : 0;
+						$registered_count = isset($course->registered_count) ? (int) $course->registered_count : 0;
+						$is_full = $capacity_number > 0 && $registered_count >= $capacity_number;
 						$batch_status = isset($course->batch_status) && isset($batch_status_labels[(int) $course->batch_status]) ? $batch_status_labels[(int) $course->batch_status] : 'รอประกาศ';
-						$is_registration_open = isset($course->batch_status) && in_array((int) $course->batch_status, array(1, 3), TRUE);
+						$is_registration_open = !$is_full && isset($course->batch_status) && in_array((int) $course->batch_status, array(1, 3), TRUE);
 						$status_class = isset($course->batch_status) && (int) $course->batch_status === 3 ? 'course__status--additional' : 'course__status--open';
+						if ($is_full) {
+							$batch_status = 'เต็ม';
+							$status_class = 'course__status--closed';
+						}
 						$start_date = isset($course->start_date) ? $course->start_date : NULL;
 						$end_date = isset($course->end_date) ? $course->end_date : NULL;
 						$cover_image = !empty($course->cover_image) ? $course->cover_image : '';
 						$cover_image_url = $cover_image !== '' && preg_match('#^https?://#i', $cover_image) ? $cover_image : base_url($cover_image);
 						$detail_url = base_url('index.php/home/detail/'.$course->slug);
+						$select_url = $registration_url;
+						if ($is_registration_open && isset($course->batch_id)) {
+							$select_url .= (strpos($select_url, '?') === FALSE ? '?' : '&').'batch_id='.(int) $course->batch_id;
+						}
 						?>
 						<article class="course">
 							<div class="course__media<?php echo $cover_image !== '' ? ' course__media--image' : ''; ?>">
@@ -119,7 +134,7 @@ $format_course_date = function ($start_date, $end_date = NULL) {
 									<div class="course__actions">
 										<a class="course__link" href="<?php echo $detail_url; ?>">รายละเอียด</a>
 										<?php if ($is_registration_open): ?>
-											<a class="course__status <?php echo $status_class; ?>" href="<?php echo $detail_url; ?>#register"><?php echo html_escape($batch_status); ?></a>
+											<a class="course__status <?php echo $status_class; ?>" href="<?php echo $select_url; ?>"><?php echo html_escape($batch_status); ?></a>
 										<?php else: ?>
 											<span class="course__status course__status--closed" aria-disabled="true"><?php echo html_escape($batch_status); ?></span>
 										<?php endif; ?>

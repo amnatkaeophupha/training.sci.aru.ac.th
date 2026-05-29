@@ -58,7 +58,7 @@ class Auth extends CI_Controller {
 						'full_name' => $member['title_name'].$member['first_name'].' '.$member['last_name'],
 						'email' => $member['email']
 					));
-					redirect('dashboard');
+					redirect('');
 					return;
 				}
 			}
@@ -186,6 +186,6 @@ class Auth extends CI_Controller {
 	{
 		$this->session->unset_userdata('member');
 		$this->session->set_flashdata('success', 'ออกจากระบบเรียบร้อยแล้ว');
-		redirect('auth/login');
+		redirect(base_url());
 	}
 }

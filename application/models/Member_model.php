@@ -119,4 +119,28 @@ class Member_model extends CI_Model {
 			->get($this->table)
 			->row_array();
 	}
+
+	public function find_by_id($id)
+	{
+		return $this->db
+			->where('id', (int) $id)
+			->limit(1)
+			->get($this->table)
+			->row_array();
+	}
+
+	public function update_profile($id, $data)
+	{
+		return $this->db
+			->where('id', (int) $id)
+			->update($this->table, array(
+				'title_name' => $data['title_name'],
+				'first_name' => $data['first_name'],
+				'last_name' => $data['last_name'],
+				'position_name' => $data['position_name'],
+				'organization_name' => $data['organization_name'],
+				'phone' => $data['phone'],
+				'updated_at' => date('Y-m-d H:i:s')
+			));
+	}
 }

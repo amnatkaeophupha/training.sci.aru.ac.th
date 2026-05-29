@@ -53,6 +53,8 @@ $route['default_controller'] = 'home';
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
 
+$route['dashboard/participants/(:num)'] = 'dashboard/participants/$1';
+$route['dashboard/payment-slip/(:num)'] = 'dashboard/upload_payment_slip/$1';
 
 $route['admin'] = 'admin/auth/login';
 $route['admin/login'] = 'admin/auth/login';

@@ -5,7 +5,7 @@ CREATE TABLE training_registrations (
 
     registration_code VARCHAR(50) UNIQUE,
 
-    status TINYINT DEFAULT 1 COMMENT '1=รออนุมัติ, 2=อนุมัติ, 3=ยกเลิก',
+    status TINYINT DEFAULT 1 COMMENT '1=รอชำระเงิน / รออนุมัติ, 2=อนุมัติแล้ว, 3=ไม่อนุมัติ, 4=ยกเลิก, 5=เข้าอบรมแล้ว',
 
     created_at DATETIME NULL,
     updated_at DATETIME NULL,

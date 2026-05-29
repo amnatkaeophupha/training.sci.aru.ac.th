@@ -13,6 +13,9 @@
 	<link href="https://fonts.googleapis.com/css?family=Roboto+Condensed:300italic,400italic,700italic,400,300,700" rel="stylesheet" type="text/css">
 	<link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
 	<link href="https://fonts.googleapis.com/css?family=Chakra+Petch|Sarabun|Kodchasan" rel="stylesheet">
+	<?php if (!empty($extra_head)): ?>
+		<?php echo $extra_head; ?>
+	<?php endif; ?>
 	<link href="<?php echo base_url('assets/css/training.css?v=course-image-20260528'); ?>" rel="stylesheet" type="text/css">
 </head>
 <body class="<?php echo html_escape($body_class); ?>">
