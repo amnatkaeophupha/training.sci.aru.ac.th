@@ -1,6 +1,7 @@
 <?php
 $admin_name = $this->session->userdata('admin_name') ?: 'ผู้ดูแลระบบ';
 $admin_role = $this->session->userdata('admin_role') ?: 'Administrator';
+$is_super_admin = $admin_role === 'super_admin';
 $initial = function_exists('mb_substr') ? mb_substr($admin_name, 0, 1, 'UTF-8') : substr($admin_name, 0, 1);
 $current_uri = $this->uri->uri_string();
 ?>
@@ -21,13 +22,15 @@ $current_uri = $this->uri->uri_string();
 
             <nav class="admin-menu nav nav-pills flex-column gap-2">
                 <a class="nav-link <?= $current_uri === 'admin/dashboard' ? 'active' : ''; ?>" href="<?= site_url('admin/dashboard'); ?>">Dashboard</a>
-                <a class="nav-link <?= strpos($current_uri, 'admin/admins') === 0 ? 'active' : ''; ?>" href="<?= site_url('admin/admins'); ?>">จัดการผู้ดูแลระบบ</a>
+                <?php if ($is_super_admin): ?>
+                    <a class="nav-link <?= strpos($current_uri, 'admin/admins') === 0 ? 'active' : ''; ?>" href="<?= site_url('admin/admins'); ?>">จัดการผู้ดูแลระบบ</a>
+                <?php endif; ?>
                 <a class="nav-link <?= (strpos($current_uri, 'admin/categories') === 0 || strpos($current_uri, 'admin/courses') === 0 || strpos($current_uri, 'admin/course-details') === 0 || strpos($current_uri, 'admin/course-instructors') === 0) ? 'active' : ''; ?>" href="<?= site_url('admin/courses'); ?>">หลักสูตรอบรม</a>
                 <a class="nav-link <?= strpos($current_uri, 'admin/batches') === 0 ? 'active' : ''; ?>" href="<?= site_url('admin/batches'); ?>">จัดการรุ่นอบรม</a>
-                <a class="nav-link" href="#">จัดการผู้ลงทะเบียน</a>
+                <a class="nav-link <?= strpos($current_uri, 'admin/registrations') === 0 ? 'active' : ''; ?>" href="<?= site_url('admin/registrations'); ?>">จัดการผู้ลงทะเบียน</a>
                 <a class="nav-link <?= strpos($current_uri, 'admin/instructors') === 0 ? 'active' : ''; ?>" href="<?= site_url('admin/instructors'); ?>">จัดการวิทยากร</a>
                 <a class="nav-link <?= strpos($current_uri, 'admin/documents') === 0 ? 'active' : ''; ?>" href="<?= site_url('admin/documents'); ?>">จัดการเอกสาร</a>
-                <a class="nav-link" href="#">รายงาน</a>
+                <a class="nav-link <?= strpos($current_uri, 'admin/reports') === 0 ? 'active' : ''; ?>" href="<?= site_url('admin/reports'); ?>">รายงาน</a>
                 <a class="nav-link admin-menu__logout mt-2" href="<?= site_url('admin/logout'); ?>">ออกจากระบบ</a>
             </nav>
         </aside>

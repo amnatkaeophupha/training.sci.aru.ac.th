@@ -55,6 +55,9 @@ $route['translate_uri_dashes'] = FALSE;
 
 $route['dashboard/participants/(:num)'] = 'dashboard/participants/$1';
 $route['dashboard/payment-slip/(:num)'] = 'dashboard/upload_payment_slip/$1';
+$route['dashboard/cancel-registration/(:num)'] = 'dashboard/cancel_registration/$1';
+
+$route['auth/reset-password/(:any)'] = 'auth/reset_password/$1';
 
 $route['admin'] = 'admin/auth/login';
 $route['admin/login'] = 'admin/auth/login';
@@ -84,6 +87,10 @@ $route['admin/batches'] = 'admin/batches/index';
 $route['admin/batches/store'] = 'admin/batches/store';
 $route['admin/batches/update/(:num)'] = 'admin/batches/update/$1';
 $route['admin/batches/delete/(:num)'] = 'admin/batches/delete/$1';
+$route['admin/registrations'] = 'admin/registrations/index';
+$route['admin/registrations/view/(:num)'] = 'admin/registrations/view/$1';
+$route['admin/registrations/update-status/(:num)'] = 'admin/registrations/update_status/$1';
+$route['admin/registrations/update-payment/(:num)/(:num)'] = 'admin/registrations/update_payment/$1/$2';
 $route['admin/instructors'] = 'admin/instructors/index';
 $route['admin/instructors/store'] = 'admin/instructors/store';
 $route['admin/instructors/update/(:num)'] = 'admin/instructors/update/$1';
@@ -92,6 +99,7 @@ $route['admin/documents'] = 'admin/documents/index';
 $route['admin/documents/store'] = 'admin/documents/store';
 $route['admin/documents/update/(:num)'] = 'admin/documents/update/$1';
 $route['admin/documents/delete/(:num)'] = 'admin/documents/delete/$1';
+$route['admin/reports'] = 'admin/reports/index';
 $route['admin/logout'] = 'admin/auth/logout';
 /*
 
