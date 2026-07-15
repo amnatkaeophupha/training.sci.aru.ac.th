@@ -76,8 +76,8 @@ $query_builder = TRUE;
 $db['default'] = array(
 	'dsn'	=> '',
 	'hostname' => 'localhost',
-	'username' => 'root',
-	'password' => '',
+	'username' => 'webaru',
+	'password' => '6Cepv=BzF?fcM6rXxt*cAbtamr6RFLUy3qL2AyHbY2HfeeWuD@qygrUXkXV*J9dSq',
 	'database' => 'ci3_sci_training',
 	'dbdriver' => 'mysqli',
 	'dbprefix' => '',

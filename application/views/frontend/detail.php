@@ -221,7 +221,7 @@ $this->load->view('frontend/layouts/nav');
 					<span class="status"><?php echo html_escape($batch_status); ?></span>
 					<h3>สมัครเข้าร่วมอบรม</h3>
 					<p>ตรวจสอบข้อมูลรอบอบรมและเตรียมข้อมูลผู้สมัครให้พร้อมก่อนส่งแบบฟอร์ม</p>
-					<a class="btn" href="<?php echo base_url('index.php/auth/register'); ?>">กรอกใบสมัคร</a>
+					<a class="btn" href="<?php echo base_url('index.php/auth/register'); ?>">ยืนยันการลงทะเบียน</a>
 					<a class="btn btn--light" href="<?php echo base_url('index.php#programs'); ?>">ดูหลักสูตรอื่น</a>
 				</section>
 
