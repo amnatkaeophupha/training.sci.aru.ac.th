@@ -26,14 +26,35 @@ class Registrations extends CI_Controller
     public function index()
     {
         $filters = array(
+            'course_id' => (int) $this->input->get('course_id', TRUE),
+            'batch_id' => (int) $this->input->get('batch_id', TRUE),
             'status' => (int) $this->input->get('status', TRUE),
             'q' => trim((string) $this->input->get('q', TRUE))
         );
 
+        $batches = $filters['course_id'] > 0
+            ? $this->Registration_model->get_filter_batches($filters['course_id'])
+            : array();
+
+        $valid_batch = FALSE;
+        foreach ($batches as $batch) {
+            if ((int) $batch->id === $filters['batch_id']) {
+                $valid_batch = TRUE;
+                break;
+            }
+        }
+
+        if ($filters['batch_id'] > 0 && !$valid_batch) {
+            $filters['batch_id'] = 0;
+        }
+
         $this->load->view('admins/registrations', array(
             'registrations' => $this->Registration_model->get_all($filters),
-            'stats' => $this->Registration_model->get_stats(),
+            'stats' => $this->Registration_model->get_stats($filters),
             'filters' => $filters,
+            'courses' => $this->Registration_model->get_filter_courses(),
+            'batches' => $batches,
+            'filter_context' => $this->Registration_model->get_filter_context($filters['course_id'], $filters['batch_id']),
             'tables_ready' => $this->Registration_model->tables_ready()
         ));
     }

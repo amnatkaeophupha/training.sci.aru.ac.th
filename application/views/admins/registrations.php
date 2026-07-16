@@ -5,6 +5,9 @@ $this->load->view('admins/layouts/sidebar');
 $registrations = isset($registrations) && is_array($registrations) ? $registrations : array();
 $stats = array_merge(array('total' => 0, 'pending' => 0, 'approved' => 0, 'payment_checking' => 0), isset($stats) ? $stats : array());
 $filters = isset($filters) && is_array($filters) ? $filters : array();
+$courses = isset($courses) && is_array($courses) ? $courses : array();
+$batches = isset($batches) && is_array($batches) ? $batches : array();
+$filter_context = isset($filter_context) ? $filter_context : NULL;
 $tables_ready = isset($tables_ready) ? (bool) $tables_ready : FALSE;
 $registration_labels = array(
     1 => 'รอชำระเงิน / รออนุมัติ',
@@ -62,6 +65,25 @@ $format_money = function ($amount) {
                     </div>
                 <?php endif; ?>
 
+                <?php if ($filter_context): ?>
+                    <section class="alert alert-primary border-0 shadow-sm mb-4" aria-label="ขอบเขตรายการผู้ลงทะเบียน">
+                        <strong class="d-block fs-5"><?= html_escape($filter_context->course_title); ?></strong>
+                        <?php if (!empty($filters['batch_id'])): ?>
+                            <span class="d-block mt-1">
+                                รุ่น <?= html_escape($filter_context->batch_no ?: '-'); ?>
+                                <?php if (!empty($filter_context->start_date)): ?>
+                                    · <?= html_escape(date('d/m/Y', strtotime($filter_context->start_date))); ?>
+                                    <?php if (!empty($filter_context->end_date) && $filter_context->end_date !== $filter_context->start_date): ?>
+                                        – <?= html_escape(date('d/m/Y', strtotime($filter_context->end_date))); ?>
+                                    <?php endif; ?>
+                                <?php endif; ?>
+                            </span>
+                        <?php else: ?>
+                            <span class="d-block mt-1">แสดงผู้ลงทะเบียนจากทุกรุ่นอบรมของหลักสูตรนี้</span>
+                        <?php endif; ?>
+                    </section>
+                <?php endif; ?>
+
                 <section class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-3 mb-4" aria-label="สรุปผู้ลงทะเบียน">
                     <div class="col">
                         <article class="admin-stat-card card h-100 border-0 shadow-sm">
@@ -104,11 +126,33 @@ $format_money = function ($amount) {
                 <article class="card border-0 shadow-sm">
                     <div class="card-header bg-white">
                         <form class="row g-2 align-items-end" method="get" action="<?= site_url('admin/registrations'); ?>">
-                            <div class="col-md-5">
+                            <div class="col-md-6 col-xl-3">
+                                <label class="form-label fw-bold" for="course_id">หลักสูตร</label>
+                                <select class="form-select" id="course_id" name="course_id">
+                                    <option value="0">ทุกหลักสูตร</option>
+                                    <?php foreach ($courses as $course): ?>
+                                        <option value="<?= (int) $course->id; ?>" <?= isset($filters['course_id']) && (int) $filters['course_id'] === (int) $course->id ? 'selected' : ''; ?>>
+                                            <?= html_escape($course->title); ?> (<?= number_format((int) $course->registration_count); ?>)
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-6 col-xl-2">
+                                <label class="form-label fw-bold" for="batch_id">รุ่นอบรม</label>
+                                <select class="form-select" id="batch_id" name="batch_id" <?= empty($filters['course_id']) ? 'disabled' : ''; ?>>
+                                    <option value="0">ทุกรุ่น</option>
+                                    <?php foreach ($batches as $batch): ?>
+                                        <option value="<?= (int) $batch->id; ?>" <?= isset($filters['batch_id']) && (int) $filters['batch_id'] === (int) $batch->id ? 'selected' : ''; ?>>
+                                            รุ่น <?= html_escape($batch->batch_no ?: '-'); ?> (<?= number_format((int) $batch->registration_count); ?>)
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-6 col-xl-3">
                                 <label class="form-label fw-bold" for="q">ค้นหา</label>
                                 <input class="form-control" id="q" type="search" name="q" value="<?= html_escape(isset($filters['q']) ? $filters['q'] : ''); ?>" placeholder="เลขที่สมัคร ชื่อ อีเมล หรือหลักสูตร">
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3 col-xl-2">
                                 <label class="form-label fw-bold" for="status">สถานะ</label>
                                 <select class="form-select" id="status" name="status">
                                     <option value="0">ทุกสถานะ</option>
@@ -117,7 +161,7 @@ $format_money = function ($amount) {
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <div class="col-md-3 d-flex gap-2">
+                            <div class="col-md-3 col-xl-2 d-flex gap-2">
                                 <button class="btn btn-primary flex-fill" type="submit">ค้นหา</button>
                                 <a class="btn btn-outline-secondary" href="<?= site_url('admin/registrations'); ?>">ล้าง</a>
                             </div>
@@ -193,5 +237,22 @@ $format_money = function ($amount) {
                     </div>
                 </article>
             </main>
+
+<script>
+(function () {
+    var courseSelect = document.getElementById('course_id');
+    var batchSelect = document.getElementById('batch_id');
+
+    if (!courseSelect || !batchSelect) {
+        return;
+    }
+
+    courseSelect.addEventListener('change', function () {
+        batchSelect.disabled = true;
+        batchSelect.value = '0';
+        courseSelect.form.submit();
+    });
+}());
+</script>
 
 <?php $this->load->view('admins/layouts/footer'); ?>

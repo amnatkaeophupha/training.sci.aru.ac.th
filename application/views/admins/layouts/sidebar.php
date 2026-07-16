@@ -30,6 +30,7 @@ $current_uri = $this->uri->uri_string();
                 <a class="nav-link <?= strpos($current_uri, 'admin/registrations') === 0 ? 'active' : ''; ?>" href="<?= site_url('admin/registrations'); ?>">จัดการผู้ลงทะเบียน</a>
                 <a class="nav-link <?= strpos($current_uri, 'admin/instructors') === 0 ? 'active' : ''; ?>" href="<?= site_url('admin/instructors'); ?>">จัดการวิทยากร</a>
                 <a class="nav-link <?= strpos($current_uri, 'admin/documents') === 0 ? 'active' : ''; ?>" href="<?= site_url('admin/documents'); ?>">จัดการเอกสาร</a>
+                <a class="nav-link <?= strpos($current_uri, 'admin/surveys') === 0 ? 'active' : ''; ?>" href="<?= site_url('admin/surveys'); ?>">แบบประเมินหลังอบรม</a>
                 <a class="nav-link <?= strpos($current_uri, 'admin/reports') === 0 ? 'active' : ''; ?>" href="<?= site_url('admin/reports'); ?>">รายงาน</a>
                 <a class="nav-link admin-menu__logout mt-2" href="<?= site_url('admin/logout'); ?>">ออกจากระบบ</a>
             </nav>

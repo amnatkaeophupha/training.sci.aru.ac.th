@@ -60,6 +60,14 @@ class Registration_model extends CI_Model
             $this->db->where('training_registrations.status', (int) $filters['status']);
         }
 
+        if (!empty($filters['course_id'])) {
+            $this->db->where('training_courses.id', (int) $filters['course_id']);
+        }
+
+        if (!empty($filters['batch_id'])) {
+            $this->db->where('training_batches.id', (int) $filters['batch_id']);
+        }
+
         if (!empty($filters['q'])) {
             $q = trim((string) $filters['q']);
             $this->db->group_start()
@@ -78,7 +86,7 @@ class Registration_model extends CI_Model
             ->result();
     }
 
-    public function get_stats()
+    public function get_stats($filters = array())
     {
         $stats = array(
             'total' => 0,
@@ -91,15 +99,110 @@ class Registration_model extends CI_Model
             return $stats;
         }
 
-        $stats['total'] = (int) $this->db->count_all_results('training_registrations');
-        $stats['pending'] = (int) $this->db->where('status', 1)->count_all_results('training_registrations');
-        $stats['approved'] = (int) $this->db->where('status', 2)->count_all_results('training_registrations');
+        $stats['total'] = $this->count_registrations_by_filters($filters);
+        $stats['pending'] = $this->count_registrations_by_filters($filters, 1);
+        $stats['approved'] = $this->count_registrations_by_filters($filters, 2);
 
         if ($this->payments_table_exists()) {
-            $stats['payment_checking'] = (int) $this->db->where('status', 2)->count_all_results('training_payments');
+            $this->db
+                ->from('training_payments')
+                ->join('training_registrations', 'training_registrations.id = training_payments.registration_id', 'inner')
+                ->join('training_batches', 'training_batches.id = training_registrations.batch_id', 'inner')
+                ->where('training_payments.status', 2);
+            $this->apply_course_batch_filters($filters);
+            $stats['payment_checking'] = (int) $this->db->count_all_results();
         }
 
         return $stats;
+    }
+
+    private function count_registrations_by_filters($filters, $status = NULL)
+    {
+        $this->db
+            ->from('training_registrations')
+            ->join('training_batches', 'training_batches.id = training_registrations.batch_id', 'inner');
+
+        if ($status !== NULL) {
+            $this->db->where('training_registrations.status', (int) $status);
+        }
+
+        $this->apply_course_batch_filters($filters);
+
+        return (int) $this->db->count_all_results();
+    }
+
+    private function apply_course_batch_filters($filters)
+    {
+        if (!empty($filters['course_id'])) {
+            $this->db->where('training_batches.course_id', (int) $filters['course_id']);
+        }
+
+        if (!empty($filters['batch_id'])) {
+            $this->db->where('training_batches.id', (int) $filters['batch_id']);
+        }
+    }
+
+    public function get_filter_courses()
+    {
+        if (!$this->tables_ready()) {
+            return array();
+        }
+
+        return $this->db
+            ->select('training_courses.id, training_courses.title')
+            ->select('COUNT(DISTINCT training_registrations.id) AS registration_count', FALSE)
+            ->from('training_courses')
+            ->join('training_batches', 'training_batches.course_id = training_courses.id', 'inner')
+            ->join('training_registrations', 'training_registrations.batch_id = training_batches.id', 'inner')
+            ->group_by('training_courses.id')
+            ->order_by('training_courses.title', 'ASC')
+            ->get()
+            ->result();
+    }
+
+    public function get_filter_batches($course_id)
+    {
+        if (!$this->tables_ready() || (int) $course_id <= 0) {
+            return array();
+        }
+
+        return $this->db
+            ->select('training_batches.id, training_batches.batch_no')
+            ->select('training_batches.start_date, training_batches.end_date, training_batches.capacity')
+            ->select('COUNT(DISTINCT training_registrations.id) AS registration_count', FALSE)
+            ->from('training_batches')
+            ->join('training_registrations', 'training_registrations.batch_id = training_batches.id', 'left')
+            ->where('training_batches.course_id', (int) $course_id)
+            ->group_by('training_batches.id')
+            ->order_by('training_batches.start_date', 'DESC')
+            ->order_by('training_batches.id', 'DESC')
+            ->get()
+            ->result();
+    }
+
+    public function get_filter_context($course_id, $batch_id = 0)
+    {
+        if (!$this->tables_ready() || (int) $course_id <= 0) {
+            return NULL;
+        }
+
+        $this->db
+            ->select('training_courses.id AS course_id, training_courses.title AS course_title')
+            ->select('training_batches.id AS batch_id, training_batches.batch_no')
+            ->select('training_batches.start_date, training_batches.end_date, training_batches.capacity')
+            ->from('training_courses')
+            ->join('training_batches', 'training_batches.course_id = training_courses.id', 'left')
+            ->where('training_courses.id', (int) $course_id);
+
+        if ((int) $batch_id > 0) {
+            $this->db->where('training_batches.id', (int) $batch_id);
+        }
+
+        return $this->db
+            ->order_by('training_batches.start_date', 'DESC')
+            ->limit(1)
+            ->get()
+            ->row();
     }
 
     public function get_by_id($id)
