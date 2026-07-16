@@ -437,6 +437,22 @@ class Dashboard extends CI_Controller {
 			{
 				$error = 'รูปแบบอีเมลไม่ถูกต้อง';
 			}
+			elseif ($action === 'update')
+			{
+				$participant_id = (int) $this->input->post('participant_id', TRUE);
+
+				if ($participant_id <= 0 || !$this->Batch_model->update_registration_participant($registration_id, $participant_id, $participant))
+				{
+					$this->session->set_flashdata('error', 'ไม่สามารถแก้ไขข้อมูลผู้เข้าอบรมได้');
+				}
+				else
+				{
+					$this->session->set_flashdata('success', 'แก้ไขข้อมูลผู้เข้าอบรมเรียบร้อยแล้ว');
+				}
+
+				redirect('dashboard/participants/'.$registration_id);
+				return;
+			}
 			else
 			{
 				if ($capacity_number > 0 && $registered_count >= $capacity_number)

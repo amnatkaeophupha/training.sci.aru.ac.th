@@ -238,6 +238,34 @@ $this->load->view('frontend/layouts/nav');
 					</div>
 				</div>
 
+				<div class="modal fade" id="participantEditModal" tabindex="-1" aria-label="แก้ไขข้อมูลผู้เข้าอบรม" aria-hidden="true">
+					<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+						<div class="modal-content">
+							<form class="participant-form participant-form--modal" method="post" action="<?php echo base_url('index.php/dashboard/participants/'.$registration->registration_id); ?>">
+								<input type="hidden" name="action" value="update">
+								<input type="hidden" name="participant_id" id="edit_participant_id" value="">
+								<div class="participant-form__head">
+									<h3>แก้ไขข้อมูลผู้เข้าอบรม</h3>
+								</div>
+								<div class="modal-body participant-form__grid">
+									<label><span>ประเภท</span><select name="participant_type" id="edit_participant_type"><option value="student">นักเรียน / นักศึกษา</option><option value="teacher">ครู / อาจารย์</option><option value="staff">บุคลากร</option><option value="member">สมาชิกผู้สมัคร</option><option value="other">อื่น ๆ</option></select></label>
+									<label><span>คำนำหน้า</span><input type="text" name="title_name" id="edit_title_name"></label>
+									<label><span>ชื่อ *</span><input type="text" name="first_name" id="edit_first_name" required></label>
+									<label><span>นามสกุล *</span><input type="text" name="last_name" id="edit_last_name" required></label>
+									<label><span>รหัสนักเรียน/นักศึกษา</span><input type="text" name="student_code" id="edit_student_code"></label>
+									<label><span>หน่วยงาน / โรงเรียน</span><input type="text" name="school_name" id="edit_school_name"></label>
+									<label><span>โทรศัพท์</span><input type="text" name="phone" id="edit_phone"></label>
+									<label><span>อีเมล</span><input type="email" name="email" id="edit_email"></label>
+								</div>
+								<div class="modal-footer participant-form__actions">
+									<button type="button" class="participant-modal-cancel" data-bs-dismiss="modal">ยกเลิก</button>
+									<button class="btn" type="submit">บันทึกการแก้ไข</button>
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+
 				<div class="participant-layout participant-layout--single">
 					<div class="participant-list">
 						<div class="participant-list__head">
@@ -271,11 +299,23 @@ $this->load->view('frontend/layouts/nav');
 												<small><?php echo html_escape($participant->email); ?></small>
 											<?php endif; ?>
 										</div>
-										<form class="participant-delete-form" method="post" action="<?php echo base_url('index.php/dashboard/participants/'.$registration->registration_id); ?>" data-participant-name="<?php echo html_escape($participant_name); ?>">
+									<div class="participant-row-actions">
+										<button class="btn btn-sm btn-warning participant-edit" type="button" data-bs-toggle="modal" data-bs-target="#participantEditModal"
+											data-participant-id="<?php echo (int) $participant->id; ?>"
+											data-participant-type="<?php echo html_escape(isset($participant->participant_type) ? $participant->participant_type : 'student'); ?>"
+											data-title-name="<?php echo html_escape(isset($participant->title_name) ? $participant->title_name : ''); ?>"
+											data-first-name="<?php echo html_escape(isset($participant->first_name) ? $participant->first_name : ''); ?>"
+											data-last-name="<?php echo html_escape(isset($participant->last_name) ? $participant->last_name : ''); ?>"
+											data-student-code="<?php echo html_escape(isset($participant->student_code) ? $participant->student_code : ''); ?>"
+											data-school-name="<?php echo html_escape(isset($participant->school_name) ? $participant->school_name : ''); ?>"
+											data-phone="<?php echo html_escape(isset($participant->phone) ? $participant->phone : ''); ?>"
+											data-email="<?php echo html_escape(isset($participant->email) ? $participant->email : ''); ?>">แก้ไข</button>
+									<form class="participant-delete-form" method="post" action="<?php echo base_url('index.php/dashboard/participants/'.$registration->registration_id); ?>" data-participant-name="<?php echo html_escape($participant_name); ?>">
 											<input type="hidden" name="action" value="delete">
 											<input type="hidden" name="participant_id" value="<?php echo (int) $participant->id; ?>">
 											<button class="participant-delete" type="submit">ลบ</button>
-										</form>
+									</form>
+									</div>
 									</div>
 								<?php endforeach; ?>
 							</div>
@@ -312,6 +352,20 @@ document.querySelectorAll(".participant-delete-form").forEach(function (form) {
 		}).then(function (result) {
 			if (result.isConfirmed) {
 				form.submit();
+			}
+		});
+	});
+});
+
+document.querySelectorAll(".participant-edit").forEach(function (button) {
+	button.addEventListener("click", function () {
+		[
+			"participant_id", "participant_type", "title_name", "first_name", "last_name",
+			"student_code", "school_name", "phone", "email"
+		].forEach(function (field) {
+			var input = document.getElementById("edit_" + field);
+			if (input) {
+				input.value = button.getAttribute("data-" + field.replace(/_/g, "-")) || "";
 			}
 		});
 	});

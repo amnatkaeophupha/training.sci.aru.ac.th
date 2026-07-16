@@ -558,6 +558,33 @@ class Batch_model extends CI_Model
         ));
     }
 
+    public function update_registration_participant($registration_id, $participant_id, $data)
+    {
+        if (!$this->participants_table_exists()) {
+            return FALSE;
+        }
+
+        $participant = array(
+            'title_name' => $data['title_name'],
+            'first_name' => $data['first_name'],
+            'last_name' => $data['last_name'],
+            'student_code' => $data['student_code'],
+            'school_name' => $data['school_name'],
+            'phone' => $data['phone'],
+            'email' => strtolower($data['email']),
+            'updated_at' => date('Y-m-d H:i:s')
+        );
+
+        if ($this->db->field_exists('participant_type', 'training_registration_participants')) {
+            $participant['participant_type'] = $data['participant_type'];
+        }
+
+        return $this->db
+            ->where('registration_id', (int) $registration_id)
+            ->where('id', (int) $participant_id)
+            ->update('training_registration_participants', $participant);
+    }
+
     public function delete_registration_participant($registration_id, $participant_id)
     {
         if (!$this->participants_table_exists()) {

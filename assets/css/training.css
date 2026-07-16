@@ -1957,6 +1957,31 @@
 	cursor: pointer;
 }
 
+.participant-row-actions {
+	display: flex;
+	flex-wrap: nowrap;
+	gap: 8px;
+	align-items: center;
+	white-space: nowrap;
+}
+
+.participant-row-actions form {
+	margin: 0;
+}
+
+.participant-edit {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 30px;
+	padding: 0 9px;
+	border-radius: var(--radius);
+	font: inherit;
+	font-size: 13px;
+	font-weight: 400;
+	cursor: pointer;
+}
+
 .dashboard-empty--compact {
 	margin: 18px;
 }
