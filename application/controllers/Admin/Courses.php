@@ -107,6 +107,12 @@ class Courses extends CI_Controller
             return;
         }
 
+        if ($this->Course_model->count_batches($id) > 0) {
+            $this->session->set_flashdata('error', 'ไม่สามารถลบหลักสูตรที่มีรุ่นอบรมอยู่ได้ กรุณาจัดการรุ่นอบรมก่อน');
+            redirect('admin/courses');
+            return;
+        }
+
         $this->Course_model->delete_course($id);
         $this->session->set_flashdata('success', 'ลบหลักสูตรเรียบร้อยแล้ว');
         redirect('admin/courses');

@@ -18,6 +18,7 @@ foreach ($registration_defaults as $field => $value) {
 	}
 }
 $participants = isset($participants) && is_array($participants) ? $participants : array();
+$certificate_states = isset($certificate_states) && is_array($certificate_states) ? $certificate_states : array();
 $success = isset($success) ? $success : '';
 $error = isset($error) ? $error : '';
 $capacity_number = isset($registration->capacity) ? (int) $registration->capacity : 0;
@@ -284,6 +285,20 @@ $this->load->view('frontend/layouts/nav');
 								<?php foreach ($participants as $participant): ?>
 									<?php
 									$participant_name = trim((isset($participant->title_name) ? $participant->title_name : '').(isset($participant->first_name) ? $participant->first_name : '').' '.(isset($participant->last_name) ? $participant->last_name : ''));
+									$certificate_state = isset($certificate_states[(int) $participant->id]) ? $certificate_states[(int) $participant->id] : NULL;
+									$is_locked = $certificate_state && (!empty($certificate_state->profile_confirmed_at) || !empty($certificate_state->completed_at) || !empty($certificate_state->certificate_id));
+									$certificate_reason = '';
+									if (!$certificate_state || (int) $certificate_state->registration_status !== 5) {
+										$certificate_reason = 'ยังไม่ยืนยันเข้าอบรม';
+									} elseif (empty($certificate_state->profile_confirmed_at)) {
+										$certificate_reason = 'ยังไม่ยืนยันข้อมูลส่วนตัว';
+									} elseif (empty($certificate_state->completed_at)) {
+										$certificate_reason = 'ยังไม่ตอบแบบประเมิน';
+									} elseif ((int) $certificate_state->has_template !== 1) {
+										$certificate_reason = 'ยังไม่มีแม่แบบวุฒิบัตร';
+									} elseif (empty($certificate_state->certificate_id)) {
+										$certificate_reason = 'กำลังรอออกวุฒิบัตร';
+									}
 									?>
 									<div class="participant-table__row" role="row">
 										<div>
@@ -300,6 +315,15 @@ $this->load->view('frontend/layouts/nav');
 											<?php endif; ?>
 										</div>
 									<div class="participant-row-actions">
+										<?php if ($certificate_state && $certificate_reason === '' && !empty($certificate_state->certificate_id)): ?>
+											<a class="btn btn-success participant-certificate-download" href="<?php echo base_url('index.php/dashboard/participants/'.$registration->registration_id.'/certificate/'.$participant->id); ?>">วุฒิบัตร</a>
+											<small><?php echo html_escape($certificate_state->certificate_no); ?></small>
+										<?php else: ?>
+											<small><?php echo html_escape($certificate_reason); ?></small>
+										<?php endif; ?>
+										<?php if ($is_locked): ?>
+											<span class="badge bg-secondary">ล็อกข้อมูลแล้ว</span>
+										<?php else: ?>
 										<button class="btn btn-sm btn-warning participant-edit" type="button" data-bs-toggle="modal" data-bs-target="#participantEditModal"
 											data-participant-id="<?php echo (int) $participant->id; ?>"
 											data-participant-type="<?php echo html_escape(isset($participant->participant_type) ? $participant->participant_type : 'student'); ?>"
@@ -315,6 +339,7 @@ $this->load->view('frontend/layouts/nav');
 											<input type="hidden" name="participant_id" value="<?php echo (int) $participant->id; ?>">
 											<button class="participant-delete" type="submit">ลบ</button>
 									</form>
+										<?php endif; ?>
 									</div>
 									</div>
 								<?php endforeach; ?>

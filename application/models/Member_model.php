@@ -123,6 +123,33 @@ class Member_model extends CI_Model {
 			->count_all_results($this->table) > 0;
 	}
 
+	public function email_exists_except($email, $id)
+	{
+		return $this->db->where('email', strtolower($email))->where('id !=', (int) $id)
+			->count_all_results($this->table) > 0;
+	}
+
+	public function admin_update($id, $data)
+	{
+		$row = array(
+			'title_name'=>$data['title_name'], 'first_name'=>$data['first_name'], 'last_name'=>$data['last_name'],
+			'position_name'=>$data['position_name'], 'organization_name'=>$data['organization_name'],
+			'email'=>strtolower($data['email']), 'phone'=>$data['phone'], 'status'=>(int)$data['status'],
+			'updated_at'=>date('Y-m-d H:i:s')
+		);
+		if ($data['password'] !== '') $row['password_hash'] = password_hash($data['password'], PASSWORD_DEFAULT);
+		return $this->db->where('id', (int)$id)->update($this->table, $row);
+	}
+
+	public function admin_delete($id)
+	{
+		$id = (int) $id;
+		if ($this->db->where('member_id', $id)->count_all_results('training_registrations') > 0) return FALSE;
+		if ($this->db->field_exists('member_id', 'training_registration_participants')
+			&& $this->db->where('member_id', $id)->count_all_results('training_registration_participants') > 0) return FALSE;
+		return $this->db->where('id', $id)->delete($this->table);
+	}
+
 	public function create($data)
 	{
 		$now = date('Y-m-d H:i:s');
@@ -165,6 +192,40 @@ class Member_model extends CI_Model {
 			->limit(1)
 			->get($this->table)
 			->row_array();
+	}
+
+	public function get_admin_list($query = '', $limit = 50)
+	{
+		$this->db->select('id,title_name,first_name,last_name,position_name,organization_name,email,phone,status,created_at')
+			->from($this->table);
+
+		$query = trim((string) $query);
+		if ($query !== '')
+		{
+			$this->db->group_start()
+				->like('first_name', $query)
+				->or_like('last_name', $query)
+				->or_like('email', $query)
+				->or_like('phone', $query)
+				->or_like('organization_name', $query)
+				->group_end();
+		}
+
+		return $this->db->order_by('id', 'DESC')->limit((int) $limit)->get()->result();
+	}
+
+	public function get_admin_stats()
+	{
+		$row = $this->db->select('COUNT(*) AS total', FALSE)
+			->select('SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS active', FALSE)
+			->select('SUM(CASE WHEN status != 1 THEN 1 ELSE 0 END) AS inactive', FALSE)
+			->get($this->table)->row();
+
+		return array(
+			'total' => (int) $row->total,
+			'active' => (int) $row->active,
+			'inactive' => (int) $row->inactive
+		);
 	}
 
 	public function update_profile($id, $data)

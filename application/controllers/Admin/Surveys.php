@@ -23,9 +23,9 @@ class Surveys extends CI_Controller
     public function save($id = 0)
     {
         $title = trim((string) $this->input->post('title', TRUE));
-        if ($title === '') return $this->fail('กรุณากรอกชื่อแบบประเมิน', 'admin/surveys');
+        if ($title === '') return $this->fail('กรุณากรอกชื่อแบบประเมิน', $id ? 'admin/surveys?edit='.(int)$id : 'admin/surveys?create=1');
         $saved = $this->Survey_model->save_survey($id, array('title'=>$title,'description'=>trim((string)$this->input->post('description', TRUE)),'status'=>(int)$this->input->post('status', TRUE) ?: 1));
-        if (!$saved) return $this->fail('ไม่สามารถบันทึกแบบประเมินได้', 'admin/surveys');
+        if (!$saved) return $this->fail('ไม่สามารถบันทึกแบบประเมินได้', $id ? 'admin/surveys?edit='.(int)$id : 'admin/surveys?create=1');
         $this->session->set_flashdata('success', 'บันทึกแบบประเมินเรียบร้อยแล้ว');
         redirect('admin/surveys/questions/'.($id ?: $saved));
     }
@@ -68,7 +68,7 @@ class Surveys extends CI_Controller
     public function assignment($id)
     {
         $assignment=$this->Survey_model->get_assignment($id); if(!$assignment) show_404();
-        $list=$this->Survey_model->get_assignments($assignment->survey_id); $stats=NULL; foreach($list as $a) if((int)$a->id===(int)$id)$stats=$a;
+        $stats=$this->Survey_model->get_assignment_stats($id);
         $this->load->view('admins/survey_assignment',array('assignment'=>$assignment,'stats'=>$stats,'roster'=>$this->Survey_model->get_invitation_roster($id)));
     }
 

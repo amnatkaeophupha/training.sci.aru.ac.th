@@ -140,7 +140,7 @@ $status_labels = array(
                                                         <div class="d-flex flex-wrap gap-2">
                                                             <a class="btn btn-sm btn-outline-primary" href="<?= site_url('admin/admins?edit='.$admin->id); ?>">แก้ไข</a>
                                                             <?php if ((int) $admin->id !== (int) $this->session->userdata('admin_id')): ?>
-                                                                <form method="post" action="<?= site_url('admin/admins/delete/'.$admin->id); ?>" onsubmit="return confirm('ยืนยันการลบผู้ดูแลระบบนี้?');">
+                                                                <form class="js-admin-delete-form" method="post" action="<?= site_url('admin/admins/delete/'.$admin->id); ?>" data-admin-name="<?= html_escape($admin->name); ?>">
                                                                     <button class="btn btn-sm btn-outline-danger" type="submit">ลบ</button>
                                                                 </form>
                                                             <?php endif; ?>
@@ -214,4 +214,27 @@ $status_labels = array(
                     </div>
                 </section>
             </main>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            document.querySelectorAll('.js-admin-delete-form').forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    event.preventDefault();
+
+                    Swal.fire({
+                        title: 'ยืนยันการลบผู้ดูแลระบบ?',
+                        text: 'ต้องการลบ "' + form.dataset.adminName + '" ใช่หรือไม่',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'ลบข้อมูล',
+                        cancelButtonText: 'ยกเลิก',
+                        confirmButtonColor: '#d94f45',
+                        reverseButtons: true
+                    }).then(function (result) {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                });
+            });
+        </script>
 <?php $this->load->view('admins/layouts/footer'); ?>

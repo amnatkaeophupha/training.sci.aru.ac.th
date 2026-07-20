@@ -9,6 +9,7 @@ class Course_model extends CI_Model
     {
         return $this->db
             ->select('training_courses.*, training_categories.name AS category_name')
+            ->select('(SELECT COUNT(*) FROM training_batches b WHERE b.course_id = training_courses.id) AS batch_count',FALSE)
             ->from($this->table)
             ->join('training_categories', 'training_categories.id = training_courses.category_id', 'left')
             ->order_by('training_courses.id', 'DESC')
@@ -180,6 +181,12 @@ class Course_model extends CI_Model
         return $this->db
             ->where('id', (int) $id)
             ->delete($this->table);
+    }
+
+    public function count_batches($id)
+    {
+        if(!$this->db->table_exists('training_batches')) return 0;
+        return (int)$this->db->where('course_id',(int)$id)->count_all_results('training_batches');
     }
 
     public function get_stats()

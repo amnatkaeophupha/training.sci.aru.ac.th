@@ -118,6 +118,49 @@ class Survey_model extends CI_Model
             ->from('training_survey_assignments a')->join('training_surveys s', 's.id=a.survey_id')->join('training_courses c', 'c.id=a.course_id')->join('training_batches b', 'b.id=a.batch_id')->where('a.id', (int) $id)->get()->row();
     }
 
+    public function get_batch_assignment($batch_id)
+    {
+        return $this->db->select('a.*,s.title AS survey_title,c.title AS course_title,b.batch_no,b.start_date,b.end_date,b.end_time')
+            ->from('training_survey_assignments a')->join('training_surveys s','s.id=a.survey_id')
+            ->join('training_courses c','c.id=a.course_id')->join('training_batches b','b.id=a.batch_id')
+            ->where('a.batch_id',(int)$batch_id)->order_by('a.id','DESC')->get()->row();
+    }
+
+    public function assignment_has_responses($assignment_id)
+    {
+        return $this->db->where('assignment_id',(int)$assignment_id)->where('completed_at IS NOT NULL',NULL,FALSE)
+            ->count_all_results('training_survey_invitations') > 0;
+    }
+
+    public function update_batch_assignment($id, $survey_id, $open_at, $close_at)
+    {
+        return $this->db->where('id',(int)$id)->update('training_survey_assignments',array(
+            'survey_id'=>(int)$survey_id,'open_at'=>$open_at,'close_at'=>$close_at,'status'=>1,'updated_at'=>date('Y-m-d H:i:s')
+        ));
+    }
+
+    public function sync_invitations($assignment_id)
+    {
+        $assignment=$this->db->where('id',(int)$assignment_id)->get('training_survey_assignments')->row(); if(!$assignment)return 0;
+        $lock='survey_sync_'.(int)$assignment_id; $locked=$this->db->query('SELECT GET_LOCK(?,5) AS acquired',array($lock))->row();
+        if(!$locked || (int)$locked->acquired!==1)return 0; $now=date('Y-m-d H:i:s');
+        $this->db->query('INSERT INTO training_survey_invitations (assignment_id,participant_id,created_at,updated_at)
+            SELECT ?,p.id,?,? FROM training_registration_participants p
+            INNER JOIN training_registrations r ON r.id=p.registration_id
+            WHERE r.batch_id=? AND r.status!=4 AND p.status=1
+            AND NOT EXISTS (SELECT 1 FROM training_survey_invitations i WHERE i.assignment_id=? AND i.participant_id=p.id)',
+            array((int)$assignment_id,$now,$now,(int)$assignment->batch_id,(int)$assignment_id));
+        $affected=(int)$this->db->affected_rows(); $this->db->query('SELECT RELEASE_LOCK(?)',array($lock)); return $affected;
+    }
+
+    public function get_assignment_stats($id)
+    {
+        return $this->db->select('COUNT(*) AS eligible_count', FALSE)
+            ->select('SUM(CASE WHEN completed_at IS NOT NULL THEN 1 ELSE 0 END) AS completed_count', FALSE)
+            ->where('assignment_id', (int) $id)
+            ->get('training_survey_invitations')->row();
+    }
+
     public function get_assignment_by_code($code)
     {
         return $this->db->select('a.*,s.title AS survey_title,s.description,c.title AS course_title,b.batch_no,b.start_date,b.end_date')
@@ -142,8 +185,17 @@ class Survey_model extends CI_Model
             'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')
         ));
         $assignment_id = $this->db->insert_id();
-        $participants = $this->db->select('p.id')->from('training_registration_participants p')->join('training_registrations r', 'r.id=p.registration_id')->where('r.batch_id', (int) $data['batch_id'])->where('r.status !=', 4)->where('p.status', 1)->get()->result();
-        foreach ($participants as $participant) $this->db->insert('training_survey_invitations', array('assignment_id' => $assignment_id, 'participant_id' => $participant->id, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')));
+        // Build the complete roster in one query; a per-participant INSERT loop
+        // becomes very slow for large training batches.
+        $now = date('Y-m-d H:i:s');
+        $this->db->query(
+            'INSERT INTO training_survey_invitations (assignment_id, participant_id, created_at, updated_at)
+             SELECT ?, p.id, ?, ?
+             FROM training_registration_participants p
+             INNER JOIN training_registrations r ON r.id = p.registration_id
+             WHERE r.batch_id = ? AND r.status != 4 AND p.status = 1',
+            array($assignment_id, $now, $now, (int) $data['batch_id'])
+        );
         $this->db->where('id', (int) $data['survey_id'])->update('training_surveys', array('status' => 2, 'updated_at' => date('Y-m-d H:i:s')));
         $this->db->trans_complete();
         return $this->db->trans_status() ? $assignment_id : FALSE;
@@ -179,8 +231,14 @@ class Survey_model extends CI_Model
     public function verify_invitation($invitation, $email, $phone4)
     {
         if (!empty($invitation->verify_locked_until) && strtotime($invitation->verify_locked_until) > time()) return FALSE;
+        $email = trim((string) $email);
+        $phone4 = preg_replace('/\D+/', '', (string) $phone4);
         $phone = preg_replace('/\D+/', '', (string) $invitation->phone);
-        $valid = $invitation->email !== '' && strtolower(trim($email)) === strtolower(trim($invitation->email)) && strlen($phone) >= 4 && substr($phone, -4) === preg_replace('/\D+/', '', $phone4);
+        $email_valid = $email !== '' && trim((string) $invitation->email) !== ''
+            && strtolower($email) === strtolower(trim($invitation->email));
+        $phone_valid = strlen($phone4) === 4 && strlen($phone) >= 4
+            && substr($phone, -4) === $phone4;
+        $valid = $email_valid || $phone_valid;
         if ($valid) { $this->db->where('id', $invitation->id)->update('training_survey_invitations', array('verify_attempts' => 0, 'verify_locked_until' => NULL)); return TRUE; }
         $attempts = (int) $invitation->verify_attempts + 1;
         $this->db->where('id', $invitation->id)->update('training_survey_invitations', array('verify_attempts' => $attempts, 'verify_locked_until' => $attempts >= 5 ? date('Y-m-d H:i:s', time() + 900) : NULL));

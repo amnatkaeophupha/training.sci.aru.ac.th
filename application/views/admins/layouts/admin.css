@@ -273,6 +273,13 @@ a:focus {
     background: #f0f7ff;
 }
 
+.admin-batches-table tbody,
+.admin-batches-table tbody strong,
+.admin-batches-table tbody .badge,
+.admin-batches-table tbody .btn {
+    font-weight: 400;
+}
+
 .btn {
     font-weight: 700;
 }

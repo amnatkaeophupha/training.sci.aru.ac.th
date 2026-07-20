@@ -1,6 +1,9 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
+// Keep all application date calculations aligned with the local Thai time.
+date_default_timezone_set('Asia/Bangkok');
+
 /*
 |--------------------------------------------------------------------------
 | Base Site URL

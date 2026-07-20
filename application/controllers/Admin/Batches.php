@@ -18,6 +18,8 @@ class Batches extends CI_Controller
         $this->load->library('session');
         $this->load->model('Batch_model');
         $this->load->model('Course_model');
+        $this->load->model('Survey_model');
+        $this->load->model('Certificate_model');
 
         if (!$this->session->userdata('admin_logged_in')) {
             redirect('admin');
@@ -98,6 +100,37 @@ class Batches extends CI_Controller
         $this->session->set_flashdata('success', 'ลบรุ่นอบรมเรียบร้อยแล้ว');
         redirect('admin/batches');
     }
+
+    public function evaluation($id)
+    {
+        $id=(int)$id; $batch=$this->Batch_model->get_by_id($id); if(!$batch) show_404();
+        $assignment=$this->Survey_model->get_batch_assignment($id);
+        if($this->input->method(TRUE)==='POST') {
+            $survey_id=(int)$this->input->post('survey_id',TRUE); $survey=$this->Survey_model->get($survey_id);
+            $open=$this->evaluation_datetime($this->input->post('open_at',TRUE)); $close=$this->evaluation_datetime($this->input->post('close_at',TRUE));
+            if(!$survey || count($this->Survey_model->get_questions($survey_id))<1) return $this->evaluation_fail('กรุณาเลือกแบบประเมินที่มีคำถามอย่างน้อย 1 ข้อ',$id);
+            if(!$open||!$close||strtotime($close)<=strtotime($open)) return $this->evaluation_fail('ช่วงเวลาเปิดและปิดแบบประเมินไม่ถูกต้อง',$id);
+            if($assignment) {
+                if((int)$assignment->survey_id!==$survey_id && $this->Survey_model->assignment_has_responses($assignment->id)) return $this->evaluation_fail('ไม่สามารถเปลี่ยนแบบประเมินได้ เนื่องจากมีผู้ตอบแล้ว',$id);
+                $this->Survey_model->update_batch_assignment($assignment->id,$survey_id,$open,$close); $assignment_id=$assignment->id;
+            } else {
+                $assignment_id=$this->Survey_model->create_assignment(array('survey_id'=>$survey_id,'course_id'=>$batch->course_id,'batch_id'=>$id,'open_at'=>$open,'close_at'=>$close));
+                if(!$assignment_id) return $this->evaluation_fail('ไม่สามารถเปิดแบบประเมินสำหรับรุ่นนี้ได้',$id);
+            }
+            $this->Survey_model->sync_invitations($assignment_id); $this->session->set_flashdata('success','บันทึกการตั้งค่าแบบประเมินเรียบร้อยแล้ว');
+            redirect('admin/batches/'.$id.'/evaluation'); return;
+        }
+        if($assignment) { $this->Survey_model->sync_invitations($assignment->id); $assignment=$this->Survey_model->get_batch_assignment($id); }
+        $end_date=$batch->end_date ?: ''; $end_time=$batch->end_time ?: '23:59:00';
+        $default_open=$end_date?date('Y-m-d\TH:i',strtotime($end_date.' '.$end_time)):'';
+        $default_close=$default_open?date('Y-m-d\TH:i',strtotime(str_replace('T',' ',$default_open).' +7 days')):'';
+        $stats=$assignment?$this->Survey_model->get_assignment_stats($assignment->id):NULL;
+        $this->load->view('admins/batch_evaluation',array('batch'=>$batch,'assignment'=>$assignment,'surveys'=>$this->Survey_model->get_all(),
+            'default_open'=>$default_open,'default_close'=>$default_close,'stats'=>$stats));
+    }
+
+    private function evaluation_datetime($value) { $time=strtotime(str_replace('T',' ',(string)$value)); return $time?date('Y-m-d H:i:s',$time):NULL; }
+    private function evaluation_fail($message,$batch_id) { $this->session->set_flashdata('error',$message); redirect('admin/batches/'.(int)$batch_id.'/evaluation'); }
 
     private function get_post_data()
     {

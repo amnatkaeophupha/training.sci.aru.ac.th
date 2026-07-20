@@ -350,6 +350,8 @@ class Dashboard extends CI_Controller {
 
 		$this->load->model('Member_model');
 		$this->load->model('Batch_model');
+		$this->load->model('Survey_model');
+		$this->load->model('Certificate_model');
 
 		$member = $this->Member_model->find_by_id($session_member['id']);
 
@@ -395,6 +397,11 @@ class Dashboard extends CI_Controller {
 			if ($action === 'delete')
 			{
 				$participant_id = (int) $this->input->post('participant_id', TRUE);
+				if ($participant_id > 0 && $this->Certificate_model->participant_is_locked($registration_id,$participant_id))
+				{
+					$this->session->set_flashdata('error','ไม่สามารถลบผู้เข้าอบรมที่ยืนยันข้อมูลหรือทำแบบประเมินแล้วได้');
+					redirect('dashboard/participants/'.$registration_id); return;
+				}
 				if ($participant_id > 0)
 				{
 					$this->Batch_model->delete_registration_participant($registration_id, $participant_id);
@@ -440,6 +447,11 @@ class Dashboard extends CI_Controller {
 			elseif ($action === 'update')
 			{
 				$participant_id = (int) $this->input->post('participant_id', TRUE);
+				if ($participant_id > 0 && $this->Certificate_model->participant_is_locked($registration_id,$participant_id))
+				{
+					$this->session->set_flashdata('error','ไม่สามารถแก้ไขผู้เข้าอบรมที่ยืนยันข้อมูลหรือทำแบบประเมินแล้วได้');
+					redirect('dashboard/participants/'.$registration_id); return;
+				}
 
 				if ($participant_id <= 0 || !$this->Batch_model->update_registration_participant($registration_id, $participant_id, $participant))
 				{
@@ -474,13 +486,34 @@ class Dashboard extends CI_Controller {
 			}
 		}
 
+		$assignment=$this->Survey_model->get_batch_assignment($registration->batch_id);
+		if($assignment)$this->Survey_model->sync_invitations($assignment->id);
+		$certificate_states=$this->Certificate_model->get_registration_states($registration_id,$registration->batch_id);
+		foreach($certificate_states as $state) {
+			if(empty($state->certificate_id)&&(int)$state->has_template===1&&(int)$state->registration_status===5
+				&&!empty($state->profile_confirmed_at)&&!empty($state->completed_at))
+				$this->Certificate_model->issue($registration->batch_id,$state->participant_id,$state->invitation_id,NULL);
+		}
+		$certificate_states=$this->Certificate_model->get_registration_states($registration_id,$registration->batch_id);
 		$this->load->view('frontend/participants', array(
 			'member' => $member,
 			'registration' => $registration,
 			'participants' => $this->Batch_model->get_registration_participants($registration_id),
+			'certificate_states' => $certificate_states,
 			'success' => $this->session->flashdata('success'),
 			'error' => $error !== '' ? $error : $this->session->flashdata('error')
 		));
+	}
+
+	public function participant_certificate($registration_id,$participant_id)
+	{
+		$session_member=$this->require_member(); if($session_member===NULL)return;
+		$this->load->model('Member_model'); $this->load->model('Batch_model'); $this->load->model('Certificate_model');
+		$member=$this->Member_model->find_by_id($session_member['id']); if(!$member){redirect('auth/login');return;}
+		$registration=$this->Batch_model->get_registration_by_member((int)$registration_id,$member['id']); if(!$registration)show_404();
+		$certificate=$this->Certificate_model->get_owned_certificate((int)$registration_id,(int)$participant_id); if(!$certificate)show_404();
+		$this->Certificate_model->record_download($certificate->id); $this->load->library('Certificate_pdf');
+		$this->certificate_pdf->download($certificate);
 	}
 
 	/**

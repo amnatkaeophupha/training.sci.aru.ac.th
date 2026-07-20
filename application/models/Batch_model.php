@@ -9,6 +9,13 @@ class Batch_model extends CI_Model
     {
         return $this->db
             ->select('training_batches.*, training_courses.title AS course_title, training_categories.name AS category_name')
+            ->select('(SELECT a.id FROM training_survey_assignments a WHERE a.batch_id=training_batches.id ORDER BY a.id DESC LIMIT 1) AS evaluation_id', FALSE)
+            ->select('(SELECT a.open_at FROM training_survey_assignments a WHERE a.batch_id=training_batches.id ORDER BY a.id DESC LIMIT 1) AS evaluation_open_at', FALSE)
+            ->select('(SELECT a.close_at FROM training_survey_assignments a WHERE a.batch_id=training_batches.id ORDER BY a.id DESC LIMIT 1) AS evaluation_close_at', FALSE)
+            ->select('(SELECT a.status FROM training_survey_assignments a WHERE a.batch_id=training_batches.id ORDER BY a.id DESC LIMIT 1) AS evaluation_status', FALSE)
+            ->select('(SELECT COUNT(*) FROM training_certificate_templates t WHERE t.batch_id=training_batches.id) AS certificate_template_count', FALSE)
+            ->select('(SELECT COUNT(*) FROM training_certificates ct WHERE ct.batch_id=training_batches.id AND ct.status=1) AS certificate_issued_count', FALSE)
+            ->select('(SELECT COUNT(*) FROM training_registration_participants p INNER JOIN training_registrations r ON r.id=p.registration_id WHERE r.batch_id=training_batches.id AND r.status<>4 AND p.status=1) AS participant_count', FALSE)
             ->from($this->table)
             ->join('training_courses', 'training_courses.id = training_batches.course_id', 'left')
             ->join('training_categories', 'training_categories.id = training_courses.category_id', 'left')
@@ -758,9 +765,12 @@ class Batch_model extends CI_Model
     public function get_by_id($id)
     {
         return $this->db
-            ->where('id', (int) $id)
+            ->select('training_batches.*,training_courses.title AS course_title')
+            ->from($this->table)
+            ->join('training_courses','training_courses.id=training_batches.course_id','left')
+            ->where('training_batches.id', (int) $id)
             ->limit(1)
-            ->get($this->table)
+            ->get()
             ->row();
     }
 

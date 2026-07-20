@@ -13,5 +13,9 @@ CREATE TABLE training_payments (
     created_at DATETIME NULL,
     updated_at DATETIME NULL,
     INDEX idx_registration (registration_id),
-    INDEX idx_status (status)
+    INDEX idx_status (status),
+    CONSTRAINT fk_training_payments_registration
+        FOREIGN KEY (registration_id)
+        REFERENCES training_registrations(id)
+        ON DELETE CASCADE
 );
