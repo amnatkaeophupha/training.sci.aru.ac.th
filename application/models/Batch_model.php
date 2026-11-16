@@ -735,6 +735,39 @@ class Batch_model extends CI_Model
         return $registration ? (int) $registration->id : 0;
     }
 
+    /** Save both records atomically; do not report success for a partial registration. */
+    public function register_member_with_participant($member, $batch_id)
+    {
+        if (!$this->registrations_table_exists() || !$this->participants_table_exists()) return FALSE;
+
+        $db_debug = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
+        try {
+            if (!$this->db->trans_begin()) return FALSE;
+            if (!$this->get_selectable_frontend_batch($batch_id)) {
+                $this->db->trans_rollback();
+                return FALSE;
+            }
+            $id = $this->create_member_registration($member['id'], $batch_id);
+            if (!$id || !$this->ensure_member_registration_participant($id, $member)
+                || !$this->db->trans_status()) {
+                $this->db->trans_rollback();
+                return FALSE;
+            }
+            if (!$this->db->trans_commit()) {
+                $this->db->trans_rollback();
+                return FALSE;
+            }
+            return $id;
+        } catch (Throwable $error) {
+            $this->db->trans_rollback();
+            log_message('error', 'Registration transaction failed (batch '.(int) $batch_id.').');
+            return FALSE;
+        } finally {
+            $this->db->db_debug = $db_debug;
+        }
+    }
+
     public function create_member_registration($member_id, $batch_id)
     {
         if (!$this->registrations_table_exists()) {

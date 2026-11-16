@@ -11,13 +11,13 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  */
 class Dashboard extends CI_Controller {
 
-	private function require_member()
+	private function require_member($batch_id = 0)
 	{
 		$member = $this->session->userdata('member');
 
 		if (empty($member))
 		{
-			redirect('auth/login');
+			redirect('auth/login'.($batch_id ? '?batch_id='.$batch_id : ''));
 			return NULL;
 		}
 
@@ -150,7 +150,8 @@ class Dashboard extends CI_Controller {
 
 	public function courses()
 	{
-		$session_member = $this->require_member();
+		$selected_batch_id = training_batch_id($this->input->get('batch_id'));
+		$session_member = $this->require_member($selected_batch_id);
 
 		if ($session_member === NULL) { return; }
 
@@ -162,11 +163,16 @@ class Dashboard extends CI_Controller {
 		if (!$member)
 		{
 			$this->session->unset_userdata('member');
-			redirect('auth/login');
+			redirect('auth/login'.($selected_batch_id ? '?batch_id='.$selected_batch_id : ''));
 			return;
 		}
 
-		$selected_batch_id = (int) $this->input->get('batch_id', TRUE);
+		if ($this->input->get('batch_id') !== NULL && !$selected_batch_id)
+		{
+			$this->session->set_flashdata('error', 'รอบอบรมไม่ถูกต้อง กรุณาเลือกรอบอบรมใหม่');
+			redirect('dashboard/courses');
+			return;
+		}
 
 		if ($selected_batch_id > 0)
 		{
@@ -530,25 +536,11 @@ class Dashboard extends CI_Controller {
 			return;
 		}
 
-		if ($this->Batch_model->registrations_table_exists())
-		{
-			$registration_id = $this->Batch_model->create_member_registration($member['id'], $batch_id);
-			if ($registration_id)
-			{
-				$this->Batch_model->ensure_member_registration_participant($registration_id, $member);
-			}
-		}
-		else
-		{
-			$selected_batch_ids = $this->session->userdata('selected_course_batches');
-			$selected_batch_ids = is_array($selected_batch_ids) ? $selected_batch_ids : array();
-
-			if (!in_array((int) $batch_id, $selected_batch_ids, TRUE))
-			{
-				$selected_batch_ids[] = (int) $batch_id;
-				$this->session->set_userdata('selected_course_batches', $selected_batch_ids);
-			}
-		}
+        if (!$this->Batch_model->register_member_with_participant($member, $batch_id))
+        {
+            $this->session->set_flashdata('error', 'ไม่สามารถบันทึกการลงทะเบียนได้ กรุณาลองใหม่หรือติดต่อเจ้าหน้าที่');
+            return;
+        }
 
 		$this->session->set_flashdata('success', 'เพิ่มหลักสูตรในรายการอบรมของฉันเรียบร้อยแล้ว');
 	}

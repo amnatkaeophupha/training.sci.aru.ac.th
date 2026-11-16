@@ -86,7 +86,18 @@ foreach ($course_details as $detail) {
 	$details_by_type[$type][] = $detail;
 }
 
+$member = $this->session->userdata('member');
+$is_logged_in = is_array($member) && !empty($member['id']);
+$requested_batch_id = training_batch_id($this->input->get('batch_id'));
+$selected_batch_id = 0;
+foreach ($batches as $batch) {
+    if ((int) $batch->id === $requested_batch_id) $selected_batch_id = $requested_batch_id;
+}
+if (!$selected_batch_id && count($batches) === 1) $selected_batch_id = (int) $batches[0]->id;
 $primary_batch = !empty($batches) ? $batches[0] : NULL;
+foreach ($batches as $batch) {
+    if ((int) $batch->id === $selected_batch_id) $primary_batch = $batch;
+}
 $course_date = $primary_batch ? $format_course_date($primary_batch->start_date, $primary_batch->end_date) : 'รอประกาศ';
 $training_type = isset($type_labels[$course->training_type]) ? $type_labels[$course->training_type] : $course->training_type;
 $capacity = $primary_batch && !empty($primary_batch->capacity) ? (int) $primary_batch->capacity : (int) $course->capacity;
@@ -221,7 +232,26 @@ $this->load->view('frontend/layouts/nav');
 					<span class="status"><?php echo html_escape($batch_status); ?></span>
 					<h3>สมัครเข้าร่วมอบรม</h3>
 					<p>ตรวจสอบข้อมูลรอบอบรมและเตรียมข้อมูลผู้สมัครให้พร้อมก่อนส่งแบบฟอร์ม</p>
-					<a class="btn" href="<?php echo base_url('index.php/auth/register'); ?>">ยืนยันการลงทะเบียน</a>
+                    <?php if (!empty($batches)): ?>
+                        <form action="<?php echo base_url($is_logged_in ? 'index.php/dashboard/courses' : 'index.php/auth/login'); ?>" method="get">
+                            <?php if (count($batches) === 1): ?>
+                                <p>รอบอบรม: <?php echo html_escape($primary_batch->batch_no.' — '.$format_course_date($primary_batch->start_date, $primary_batch->end_date)); ?></p>
+                                <input type="hidden" name="batch_id" value="<?php echo (int) $primary_batch->id; ?>">
+                            <?php else: ?>
+                                <label for="registration-batch">เลือกรอบอบรม</label>
+                                <select id="registration-batch" name="batch_id" required>
+                                    <option value="">กรุณาเลือกรอบอบรม</option>
+                                    <?php foreach ($batches as $batch): ?>
+                                        <option value="<?php echo (int) $batch->id; ?>"<?php echo (int) $batch->id === $selected_batch_id ? ' selected' : ''; ?>><?php echo html_escape($batch->batch_no.' — '.$format_course_date($batch->start_date, $batch->end_date)); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            <?php endif; ?>
+                            <button class="btn" type="submit"><?php echo $is_logged_in ? 'ยืนยันการลงทะเบียน' : 'เข้าสู่ระบบเพื่อลงทะเบียน'; ?></button>
+                        </form>
+                    <?php else: ?>
+                        <p>ยังไม่มีรอบอบรมที่เปิดรับสมัคร</p>
+                        <button class="btn" type="button" disabled>ยังไม่เปิดรับลงทะเบียน</button>
+                    <?php endif; ?>
 					<a class="btn btn--light" href="<?php echo base_url('index.php#programs'); ?>">ดูหลักสูตรอื่น</a>
 				</section>
 

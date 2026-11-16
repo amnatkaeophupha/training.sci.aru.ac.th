@@ -1,3 +1,4 @@
+<?php $batch_id = isset($batch_id) ? training_batch_id($batch_id) : 0; ?>
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -33,7 +34,8 @@
 					<div class="login-alert login-alert--success" role="status"><?php echo html_escape($success); ?></div>
 				<?php endif; ?>
 
-				<form class="login-form register-form" action="<?php echo base_url('index.php/auth/register'); ?>" method="post">
+				<form class="login-form register-form" action="<?php echo base_url('index.php/auth/register'.($batch_id ? '?batch_id='.$batch_id : '')); ?>" method="post">
+					<input type="hidden" name="batch_id" value="<?php echo $batch_id; ?>">
 					<div class="form-row form-row--name">
 						<div class="form-field">
 							<label class="required-label" for="title_name">คำนำหน้า</label>
@@ -91,7 +93,7 @@
 				</form>
 
 				<div class="auth-switch">
-					มีบัญชีอยู่แล้ว? <a href="<?php echo base_url('index.php/auth/login'); ?>">เข้าสู่ระบบ</a>
+					มีบัญชีอยู่แล้ว? <a href="<?php echo base_url('index.php/auth/login'.($batch_id ? '?batch_id='.$batch_id : '')); ?>">เข้าสู่ระบบ</a>
 				</div>
 			</div>
 		</section>

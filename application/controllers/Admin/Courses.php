@@ -99,6 +99,12 @@ class Courses extends CI_Controller
 
     public function delete($id)
     {
+        if ($this->session->userdata('admin_role') === 'staff') {
+            $this->session->set_flashdata('error', 'คุณไม่มีสิทธิ์ลบหลักสูตรอบรม');
+            redirect('admin/courses');
+            return;
+        }
+
         $id = (int) $id;
 
         if (!$this->Course_model->get_by_id($id)) {

@@ -192,6 +192,7 @@ if (!empty($edit_course->published_at)) {
                                                             <a class="btn btn-sm btn-outline-primary" href="<?= site_url('admin/courses?edit='.$course->id); ?>">แก้ไข</a>
                                                             <a class="btn btn-sm btn-outline-info" href="<?= site_url('admin/course-details/'.$course->id); ?>">รายละเอียด</a>
                                                             <a class="btn btn-sm btn-outline-success" href="<?= site_url('admin/course-instructors/'.$course->id); ?>">วิทยากร</a>
+                                                            <?php if ($this->session->userdata('admin_role') !== 'staff'): ?>
                                                             <?php if ((int) $course->batch_count > 0): ?>
                                                                 <button class="btn btn-sm btn-outline-danger" type="button" disabled title="มีรุ่นอบรม ไม่สามารถลบได้">ลบ</button>
                                                                 <small class="text-secondary align-self-center">มีรุ่นอบรม <?= number_format((int) $course->batch_count); ?> รุ่น</small>
@@ -199,6 +200,7 @@ if (!empty($edit_course->published_at)) {
                                                                 <form class="js-course-delete-form" method="post" action="<?= site_url('admin/courses/delete/'.$course->id); ?>" data-course-title="<?= html_escape($course->title); ?>">
                                                                     <button class="btn btn-sm btn-outline-danger" type="submit">ลบ</button>
                                                                 </form>
+                                                            <?php endif; ?>
                                                             <?php endif; ?>
                                                         </div>
                                                     </td>

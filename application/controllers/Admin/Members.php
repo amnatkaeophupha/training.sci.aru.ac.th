@@ -50,6 +50,12 @@ class Members extends CI_Controller
 
     public function delete($id)
     {
+        if ($this->session->userdata('admin_role') === 'staff') {
+            $this->session->set_flashdata('error', 'คุณไม่มีสิทธิ์ลบสมาชิก');
+            redirect('admin/members');
+            return;
+        }
+
         if ($this->input->method(TRUE) !== 'POST') show_404();
         if (!$this->Member_model->admin_delete((int)$id)) return $this->fail('ไม่สามารถลบสมาชิกที่มีประวัติการลงทะเบียนได้');
         $this->session->set_flashdata('success', 'ลบสมาชิกเรียบร้อยแล้ว');

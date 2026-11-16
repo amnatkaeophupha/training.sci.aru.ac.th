@@ -3257,3 +3257,27 @@
 			}
 		}
 
+
+/* Course registration round selector */
+.register-box form {
+    display: grid;
+    gap: 12px;
+    min-width: 0;
+}
+.register-box select {
+    width: 100%;
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #fff;
+    font: inherit;
+}
+.register-box button {
+    font: inherit;
+    cursor: pointer;
+}
+.register-box button:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}

@@ -22,7 +22,10 @@ class Auth extends CI_Controller {
 	
 	public function login()
 	{
+		$batch_id = training_batch_id($this->input->method() === 'post'
+			? $this->input->post('batch_id') : $this->input->get('batch_id'));
 		$data = array(
+			'batch_id' => $batch_id,
 			'error' => '',
 			'success' => $this->session->flashdata('success'),
 			'email' => ''
@@ -58,7 +61,7 @@ class Auth extends CI_Controller {
 						'full_name' => $member['title_name'].$member['first_name'].' '.$member['last_name'],
 						'email' => $member['email']
 					));
-					redirect('');
+					$this->redirect_after_login($batch_id);
 					return;
 				}
 			}
@@ -69,7 +72,10 @@ class Auth extends CI_Controller {
 
 	public function register()
 	{
+		$batch_id = training_batch_id($this->input->method() === 'post'
+			? $this->input->post('batch_id') : $this->input->get('batch_id'));
 		$data = array(
+			'batch_id' => $batch_id,
 			'error' => '',
 			'success' => '',
 			'title_name' => '',
@@ -146,7 +152,7 @@ class Auth extends CI_Controller {
 				else
 				{
 					$this->session->set_flashdata('success', 'สมัครสมาชิกสำเร็จ กรุณาเข้าสู่ระบบด้วยอีเมลและรหัสผ่านที่ลงทะเบียนไว้');
-					redirect('auth/login');
+					redirect('auth/login'.($batch_id ? '?batch_id='.$batch_id : ''));
 					return;
 				}
 			}
@@ -154,6 +160,22 @@ class Auth extends CI_Controller {
 
 		$this->load->view('frontend/register', $data);
 	}
+
+    private function redirect_after_login($batch_id)
+    {
+        if ($batch_id) {
+            $this->load->model('Batch_model');
+            $batch = $this->Batch_model->get_selectable_frontend_batch($batch_id);
+            if ($batch) {
+                redirect('home/detail/'.rawurlencode($batch->slug).'?batch_id='.$batch_id.'#register');
+                return;
+            }
+            $this->session->set_flashdata('error', 'ไม่พบรอบอบรมที่เปิดรับสมัคร หรือรอบนี้ปิดรับสมัครแล้ว');
+            redirect('dashboard/courses');
+            return;
+        }
+        redirect('');
+    }
 
 	public function forgot_password()
 	{
