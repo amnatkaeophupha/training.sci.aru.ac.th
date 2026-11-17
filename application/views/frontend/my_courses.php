@@ -211,7 +211,7 @@ $this->load->view('frontend/layouts/nav');
 							$registered_count = isset($course->registered_count) ? (int) $course->registered_count : $participant_count;
 							$is_course_full = $capacity_number > 0 && $registered_count >= $capacity_number;
 							$fee_per_person = isset($course->fee_per_person) ? (float) $course->fee_per_person : (isset($course->fee) ? (float) $course->fee : 0);
-							$payment_total = isset($course->payment_total) ? (float) $course->payment_total : ($fee_per_person * $participant_count);
+							$payment_total = isset($course->payment_total) ? (float) $course->payment_total : training_fee_total($fee_per_person,$participant_count);
 							$payment_submitted_amount = isset($course->payment_submitted_amount) ? (float) $course->payment_submitted_amount : 0;
 							$payment_due_amount = isset($course->payment_due_amount) ? (float) $course->payment_due_amount : $payment_total;
 							$payment_refund_amount = isset($course->payment_refund_amount) ? (float) $course->payment_refund_amount : 0;
@@ -261,6 +261,8 @@ $this->load->view('frontend/layouts/nav');
 										<?php endif; ?>
 									</div>
 
+									<?php if (!empty($course->fee_choices)) include __DIR__.'/partials/course_fee_card.php'; ?>
+
 									<div class="member-course__payment">
 										<div>
 											<span>จำนวนผู้เข้าอบรม</span>
@@ -269,11 +271,13 @@ $this->load->view('frontend/layouts/nav');
 										<div>
 											<span>ค่าลงทะเบียน / 1 ท่าน</span>
 											<strong><?php echo html_escape($format_money($fee_per_person)); ?></strong>
+                                            <?php if (!empty($course->fee_label_snapshot) && empty($course->fee_choices)): ?><small><?= html_escape($course->fee_label_snapshot) ?></small><?php endif; ?>
 										</div>
 										<div class="member-course__payment-total">
 											<span>ยอดที่ต้องชำระ</span>
 											<strong><?php echo html_escape($format_money($payment_total)); ?></strong>
 										</div>
+
 										<?php if ($payment_submitted_amount > 0): ?>
 											<div>
 												<span>ยอดที่อัปโหลดสลิปแล้ว</span>
@@ -362,7 +366,7 @@ $this->load->view('frontend/layouts/nav');
 	<div class="page-footer-spacer" aria-hidden="true"></div>
 
 <?php $this->load->view('frontend/layouts/footer', array(
-	'footer_scripts' => '<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	'footer_scripts' => '<script src="'.base_url('assets/js/member-course-fees.js').'"></script><script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.querySelectorAll(".js-cancel-registration").forEach(function (form) {
 	form.addEventListener("submit", function (event) {

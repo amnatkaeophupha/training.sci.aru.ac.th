@@ -176,6 +176,11 @@ class Dashboard extends CI_Controller {
 
 		if ($selected_batch_id > 0)
 		{
+            $batch=$this->Batch_model->get_selectable_frontend_batch($selected_batch_id);
+            if ($batch && isset($batch->fee_mode) && $batch->fee_mode==='options'
+                && !$this->Batch_model->member_is_registered($member['id'],$selected_batch_id)) {
+                return $this->choose_registration_fee($member,$selected_batch_id);
+            }
 			$this->select_course_batch($member, $selected_batch_id);
 			redirect('dashboard/courses');
 			return;
@@ -213,6 +218,7 @@ class Dashboard extends CI_Controller {
 		}
 
 		$this->load->view('frontend/my_courses', array(
+            'fee_token'=>training_fee_token($this->session),
 			'member' => $member,
 			'courses' => $courses,
 			'is_demo' => FALSE,
@@ -526,7 +532,45 @@ class Dashboard extends CI_Controller {
 	 * @param array $member
 	 * @param int $batch_id
 	 */
-	private function select_course_batch($member, $batch_id)
+    private function choose_registration_fee($member,$batch_id)
+    {
+        $this->load->model('Pricing_model');
+        $course=$this->Pricing_model->configuration_for_batch($batch_id);
+        if (!$course || $course->fee_mode!=='options') {
+            $this->session->set_flashdata('error','รูปแบบค่าสมัครมีการเปลี่ยนแปลง กรุณาเลือกหลักสูตรใหม่');
+            redirect('dashboard/courses'); return;
+        }
+        $error='';
+        if ($this->input->method(TRUE)==='POST') {
+            $option=$this->input->post('fee_option_id'); $revision=$this->input->post('pricing_revision');
+            $valid=is_string($option) && ctype_digit($option);
+            $choice=NULL;
+            foreach ($course->fee_options as $row) if ($valid && (string)$row['id']===$option) $choice=$row;
+            if (!training_fee_token_valid($this->session,$this->input->post('fee_token'))) $error='คำขอไม่ถูกต้อง กรุณาลองใหม่';
+            elseif (!is_string($revision) || $revision!==(string)$course->pricing_revision) $error='เงื่อนไขราคามีการเปลี่ยนแปลง กรุณาตรวจสอบและยืนยันอีกครั้ง';
+            elseif (!$choice) $error='กรุณาเลือกเงื่อนไขราคาที่เปิดใช้งาน';
+            elseif ($this->Batch_model->register_member_with_participant($member,$batch_id,$option,$revision)) {
+                $this->session->set_flashdata('success','ลงทะเบียนด้วยเงื่อนไขราคาที่เลือกเรียบร้อยแล้ว');
+                redirect('dashboard/courses'); return;
+            } else $error='ไม่สามารถบันทึกได้ กรุณาตรวจสอบราคาล่าสุดและลองอีกครั้ง';
+        }
+        $this->load->view('frontend/registration_fee',array('member'=>$member,'course'=>$course,'batch_id'=>$batch_id,'error'=>$error,'fee_token'=>training_fee_token($this->session)));
+    }
+
+    public function change_fee($registration_id)
+    {
+        $member=$this->require_member(); if ($member===NULL) return;
+        if ($this->input->method(TRUE)!=='POST') { show_404(); return; }
+        $this->load->model('Pricing_model');
+        $option=$this->input->post('fee_option_id');
+        if (!training_fee_token_valid($this->session,$this->input->post('fee_token')) || !is_string($option) || !ctype_digit($option)
+            || !$this->Pricing_model->change_selection((int)$registration_id,$member['id'],$option)) {
+            $this->session->set_flashdata('error','เปลี่ยนเงื่อนไขราคาไม่ได้ รายการอาจแจ้งชำระเงินหรือถูกล็อกแล้ว กรุณาติดต่อเจ้าหน้าที่');
+        } else $this->session->set_flashdata('success','เปลี่ยนเงื่อนไขราคาและคำนวณยอดทั้งใบสมัครแล้ว');
+        redirect('dashboard/courses');
+    }
+
+    private function select_course_batch($member, $batch_id)
 	{
 		$batch = $this->Batch_model->get_selectable_frontend_batch($batch_id);
 

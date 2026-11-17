@@ -219,9 +219,11 @@ $thai_datetime = function($value) use ($thai_date) {
                                                             <a class="btn btn-sm btn-outline-primary" href="<?= site_url('admin/batches?edit='.$batch->id); ?>">แก้ไข</a>
                                                             <a class="btn btn-sm btn-outline-success" href="<?= site_url('admin/batches/'.$batch->id.'/evaluation'); ?>">แบบประเมิน</a>
                                                             <a class="btn btn-sm btn-outline-info" href="<?= site_url('admin/certificates?batch_id='.$batch->id); ?>">วุฒิบัตร</a>
+                                                            <?php if (admin_can_delete($this->session)): ?>
                                                             <form class="js-batch-delete-form" method="post" action="<?= site_url('admin/batches/delete/'.$batch->id); ?>" data-batch-title="<?= html_escape(($batch->batch_no ?: 'รุ่นอบรม').' - '.($batch->course_title ?: '')); ?>">
                                                                 <button class="btn btn-sm btn-outline-danger" type="submit">ลบ</button>
                                                             </form>
+                                                            <?php endif; ?>
                                                         </div>
                                                     </td>
                                                 </tr>

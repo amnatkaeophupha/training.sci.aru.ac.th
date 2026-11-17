@@ -9,6 +9,7 @@ $courses = isset($courses) && is_array($courses) ? $courses : array();
 $batches = isset($batches) && is_array($batches) ? $batches : array();
 $filter_context = isset($filter_context) ? $filter_context : NULL;
 $tables_ready = isset($tables_ready) ? (bool) $tables_ready : FALSE;
+$can_delete = admin_can_delete($this->session) && !empty($delete_token);
 $registration_labels = array(
     1 => 'รอชำระเงิน / รออนุมัติ',
     2 => 'อนุมัติแล้ว',
@@ -195,7 +196,7 @@ $format_money = function ($amount) {
                                         $status = (int) $registration->status;
                                         $payment_status = isset($registration->payment_status) ? (int) $registration->payment_status : 0;
                                         $participant_count = max(1, (int) $registration->participant_count);
-                                        $total_amount = (float) $registration->fee * $participant_count;
+                                        $total_amount = training_fee_total($registration->fee,$participant_count);
                                         $member_name = trim($registration->title_name.$registration->first_name.' '.$registration->last_name);
                                         ?>
                                         <tr>
@@ -214,6 +215,7 @@ $format_money = function ($amount) {
                                             <td><?= number_format($participant_count); ?> คน</td>
                                             <td>
                                                 <strong class="d-block"><?= html_escape($format_money($total_amount)); ?></strong>
+                                                <?php if (!empty($registration->fee_label_snapshot)): ?><span class="small text-secondary d-block"><?= html_escape($registration->fee_label_snapshot) ?></span><?php endif; ?>
                                                 <span class="small text-secondary">อัปโหลดแล้ว <?= html_escape($format_money($registration->paid_amount)); ?></span>
                                             </td>
                                             <td>
@@ -228,6 +230,19 @@ $format_money = function ($amount) {
                                             </td>
                                             <td>
                                                 <a class="btn btn-sm btn-outline-primary" href="<?= site_url('admin/registrations/view/'.$registration->id); ?>">รายละเอียด</a>
+                                                <?php if ($can_delete && !admin_registration_delete_locked($status, $payment_status)): ?>
+                                                    <form class="d-inline js-delete-registration" method="post" action="<?= site_url('admin/registrations/delete/'.(int) $registration->id); ?>"
+                                                        data-name="<?= html_escape($member_name); ?>" data-code="<?= html_escape($registration->registration_code); ?>" data-course="<?= html_escape($registration->course_title); ?>">
+                                                        <input type="hidden" name="delete_token" value="<?= html_escape($delete_token); ?>">
+                                                        <?php if ($this->config->item('csrf_protection')): ?>
+                                                            <input type="hidden" name="<?= html_escape($this->security->get_csrf_token_name()); ?>" value="<?= html_escape($this->security->get_csrf_hash()); ?>">
+                                                        <?php endif; ?>
+                                                        <?php foreach (array('course_id', 'batch_id', 'status', 'q') as $key): ?>
+                                                            <input type="hidden" name="<?= $key; ?>" value="<?= html_escape(isset($filters[$key]) ? $filters[$key] : ''); ?>">
+                                                        <?php endforeach; ?>
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger" disabled>ลบ</button>
+                                                    </form>
+                                                <?php endif; ?>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -238,6 +253,41 @@ $format_money = function ($amount) {
                 </article>
             </main>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+(function () {
+    document.querySelectorAll('.js-delete-registration').forEach(function (form) {
+        var button = form.querySelector('button');
+        var busy = false;
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            if (busy || typeof Swal === 'undefined') return;
+            busy = true;
+            button.disabled = true;
+            Swal.fire({
+                title: 'ยืนยันลบการลงทะเบียน?',
+                text: 'ผู้สมัคร: ' + form.dataset.name + ' | เลขที่สมัคร: ' + form.dataset.code + ' | หลักสูตร: ' + form.dataset.course + ' — ใบสมัครนี้ รวมถึงผู้เข้าอบรม รายการชำระเงิน ไฟล์หลักฐาน แบบประเมิน และสิทธิ์เกียรติบัตรที่เกี่ยวข้องจะถูกลบถาวร',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'ยืนยันลบ',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#d94f45',
+                reverseButtons: true,
+                focusCancel: true
+            }).then(function (result) {
+                if (result.isConfirmed) {
+                    HTMLFormElement.prototype.submit.call(form);
+                } else {
+                    busy = false;
+                    button.disabled = false;
+                }
+            });
+        });
+        // Keep deletion unavailable if the confirmation library failed to load.
+        if (typeof Swal !== 'undefined') button.disabled = false;
+    });
+}());
+</script>
 <script>
 (function () {
     var courseSelect = document.getElementById('course_id');

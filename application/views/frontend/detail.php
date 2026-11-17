@@ -102,6 +102,12 @@ $course_date = $primary_batch ? $format_course_date($primary_batch->start_date, 
 $training_type = isset($type_labels[$course->training_type]) ? $type_labels[$course->training_type] : $course->training_type;
 $capacity = $primary_batch && !empty($primary_batch->capacity) ? (int) $primary_batch->capacity : (int) $course->capacity;
 $fee_text = (float) $course->fee > 0 ? number_format((float) $course->fee).' บาท' : 'ไม่มีค่าใช้จ่าย';
+if (isset($course->fee_mode) && $course->fee_mode==='options') $fee_text='เริ่มต้น '.number_format((float)$course->fee,2).' บาท/คน';
+if (!empty($fee_options)) {
+    $fee_amounts=array_map(function($option){return (float)$option['amount'];},$fee_options);
+    if (max($fee_amounts)===0.0) $fee_text='ไม่มีค่าใช้จ่าย';
+    elseif (min($fee_amounts)===0.0) $fee_text='มีเงื่อนไขยกเว้นค่าสมัคร';
+}
 $batch_status = $primary_batch && isset($status_labels[(int) $primary_batch->status]) ? $status_labels[(int) $primary_batch->status] : 'รอประกาศ';
 $cover_image = !empty($course->cover_image) ? trim((string) $course->cover_image) : '';
 $cover_image_url = $cover_image !== '' && preg_match('#^https?://#i', $cover_image) ? $cover_image : base_url($cover_image);
@@ -187,6 +193,8 @@ $this->load->view('frontend/layouts/nav');
 						</div>
 					</div>
 				</section>
+
+				<?php if (!empty($fee_options)) include __DIR__.'/partials/course_fee_options.php'; ?>
 
 				<section class="panel">
 					<h3>สิ่งที่จะได้เรียนรู้</h3>

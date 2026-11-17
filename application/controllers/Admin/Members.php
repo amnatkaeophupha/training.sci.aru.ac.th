@@ -17,9 +17,50 @@ class Members extends CI_Controller
     public function index()
     {
         $query = trim((string) $this->input->get('q', TRUE));
+        $per_page = 100;
+        $total = $this->Member_model->count_admin_list($query);
+        $last_page = max(1, (int) ceil($total / $per_page));
+        $requested_page = $this->input->get('page');
+        $page = is_string($requested_page) && ctype_digit($requested_page)
+            ? max(1, min($last_page, (int) $requested_page)) : 1;
+        $base_url = site_url('admin/members');
+        if ($query !== '') $base_url .= '?'.http_build_query(array('q' => $query));
+        // Normalize malformed/out-of-range requests before Pagination reads GET.
+        if ($requested_page !== NULL && $requested_page !== (string) $page) {
+            redirect($base_url.($query !== '' ? '&' : '?').'page='.$page);
+            return;
+        }
+        $offset = ($page - 1) * $per_page;
+        $this->load->library('pagination');
+        $this->pagination->initialize(array(
+            'base_url' => $base_url,
+            'total_rows' => $total,
+            'per_page' => $per_page,
+            'use_page_numbers' => TRUE,
+            'page_query_string' => TRUE,
+            'query_string_segment' => 'page',
+            'reuse_query_string' => FALSE,
+            'num_links' => 2,
+            'first_link' => 'หน้าแรก', 'prev_link' => 'ก่อนหน้า',
+            'next_link' => 'ถัดไป', 'last_link' => 'หน้าสุดท้าย',
+            'full_tag_open' => '<ul class="pagination pagination-sm flex-wrap mb-0">',
+            'full_tag_close' => '</ul>',
+            'attributes' => array('class' => 'page-link'),
+            'first_tag_open' => '<li class="page-item">', 'first_tag_close' => '</li>',
+            'last_tag_open' => '<li class="page-item">', 'last_tag_close' => '</li>',
+            'prev_tag_open' => '<li class="page-item">', 'prev_tag_close' => '</li>',
+            'next_tag_open' => '<li class="page-item">', 'next_tag_close' => '</li>',
+            'num_tag_open' => '<li class="page-item">', 'num_tag_close' => '</li>',
+            'cur_tag_open' => '<li class="page-item active" aria-current="page"><span class="page-link">',
+            'cur_tag_close' => '</span></li>'
+        ));
         $this->load->view('admins/members', array(
             'query' => $query,
-            'members' => $this->Member_model->get_admin_list($query),
+            'members' => $this->Member_model->get_admin_list($query, $per_page, $offset),
+            'pagination_links' => $this->pagination->create_links(),
+            'total_members' => $total,
+            'range_start' => $total > 0 ? $offset + 1 : 0,
+            'range_end' => min($offset + $per_page, $total),
             'stats' => $this->Member_model->get_admin_stats()
         ));
     }
@@ -50,11 +91,7 @@ class Members extends CI_Controller
 
     public function delete($id)
     {
-        if ($this->session->userdata('admin_role') === 'staff') {
-            $this->session->set_flashdata('error', 'คุณไม่มีสิทธิ์ลบสมาชิก');
-            redirect('admin/members');
-            return;
-        }
+        if (!admin_require_delete_permission($this->session, 'admin/members')) return;
 
         if ($this->input->method(TRUE) !== 'POST') show_404();
         if (!$this->Member_model->admin_delete((int)$id)) return $this->fail('ไม่สามารถลบสมาชิกที่มีประวัติการลงทะเบียนได้');

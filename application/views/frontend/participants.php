@@ -154,6 +154,7 @@ $this->load->view('frontend/layouts/nav');
 					</div>
 					<div class="participant-summary__meta">
 						<span>เลขที่สมัคร: <?php echo html_escape($format_registration_code($registration->registration_code)); ?></span>
+                        <?php if (!empty($registration->fee_label_snapshot)): ?><span>เงื่อนไขราคา: <?= html_escape($registration->fee_label_snapshot) ?> — <?= number_format((float)$registration->unit_fee_snapshot,2) ?> บาท/คน</span><?php endif; ?>
 						<span><?php echo html_escape($format_course_date($registration->start_date, $registration->end_date)); ?></span>
 						<?php $time_range = $format_time_range($registration->start_time, $registration->end_time); ?>
 						<?php if ($time_range !== ''): ?>

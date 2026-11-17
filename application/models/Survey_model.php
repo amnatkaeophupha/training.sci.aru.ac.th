@@ -27,6 +27,42 @@ class Survey_model extends CI_Model
         return $this->db->where('id', (int) $id)->get('training_surveys')->row();
     }
 
+    /** Delete only unused, empty surveys; check again under a parent row lock. */
+    public function delete_empty_survey($id)
+    {
+        if (!$this->tables_ready()) return 'error';
+        $debug = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
+        if (!$this->db->trans_begin()) {
+            $this->db->db_debug = $debug;
+            return 'error';
+        }
+        $result = 'error';
+        $survey = $this->db->query('SELECT id FROM training_surveys WHERE id = ? FOR UPDATE', array((int) $id));
+        if ($survey && $survey->num_rows() === 0) {
+            $result = 'missing';
+        } elseif ($survey) {
+            $questions = $this->db->query('SELECT id FROM training_survey_questions WHERE survey_id = ? LIMIT 1 FOR UPDATE', array((int) $id));
+            if ($questions && $questions->num_rows() > 0) {
+                $result = 'has_questions';
+            } elseif ($questions) {
+                $assignments = $this->db->query('SELECT id FROM training_survey_assignments WHERE survey_id = ? LIMIT 1 FOR UPDATE', array((int) $id));
+                if ($assignments && $assignments->num_rows() > 0) {
+                    $result = 'in_use';
+                } elseif ($assignments && $this->db->where('id', (int) $id)->delete('training_surveys') && $this->db->trans_status()) {
+                    if ($this->db->trans_commit()) {
+                        $this->db->db_debug = $debug;
+                        return 'deleted';
+                    }
+                }
+            }
+        }
+        $this->db->trans_rollback();
+        $this->db->db_debug = $debug;
+        if ($result === 'error') log_message('error', 'Could not delete empty survey: '.(int) $id);
+        return $result;
+    }
+
     public function save_survey($id, $data)
     {
         $now = date('Y-m-d H:i:s');
@@ -298,7 +334,28 @@ class Survey_model extends CI_Model
         $assignment->questions = $this->get_questions($assignment->survey_id);
         foreach ($assignment->questions as $q) {
             $q->answers = $this->db->select('a.*,o.option_id,so.option_text')->from('training_survey_answers a')->join('training_survey_responses r','r.id=a.response_id')->join('training_survey_invitations i','i.id=r.invitation_id')->join('training_survey_answer_options o','o.answer_id=a.id','left')->join('training_survey_options so','so.id=o.option_id','left')->where('i.assignment_id',$assignment_id)->where('a.question_id',$q->id)->get()->result();
+            if ($q->question_type==='rating') $q->rating_stats=$this->rating_statistics($q->answers);
         }
         return $assignment;
+    }
+
+    private function rating_statistics($answers)
+    {
+        $values=array(); $counts=array_fill(1,5,0);
+        foreach ($answers as $answer) {
+            $value=isset($answer->rating_value)?$answer->rating_value:NULL;
+            if (!is_int($value) && !is_string($value)) continue;
+            $score=filter_var($value,FILTER_VALIDATE_INT,array('options'=>array('min_range'=>1,'max_range'=>5)));
+            if ($score===FALSE) continue;
+            $values[]=$score; $counts[$score]++;
+        }
+        sort($values,SORT_NUMERIC);
+        $count=count($values); $middle=intdiv($count,2);
+        return array(
+            'count'=>$count,
+            'mean'=>$count?array_sum($values)/$count:NULL,
+            'median'=>$count?($count%2?$values[$middle]:($values[$middle-1]+$values[$middle])/2):NULL,
+            'counts'=>$counts
+        );
     }
 }

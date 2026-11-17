@@ -29,7 +29,7 @@ $format_money = function ($amount) {
 };
 $member_name = trim((isset($registration->title_name) ? $registration->title_name : '').(isset($registration->first_name) ? $registration->first_name : '').' '.(isset($registration->last_name) ? $registration->last_name : ''));
 $participant_count = max(1, count($participants));
-$total_amount = (float) (isset($registration->fee) ? $registration->fee : 0) * $participant_count;
+$total_amount = training_fee_total(isset($registration->fee)?$registration->fee:0,$participant_count);
 ?>
         <div class="admin-content">
             <header class="admin-topbar d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-3 px-lg-4 py-3 border-bottom">
@@ -77,6 +77,7 @@ $total_amount = (float) (isset($registration->fee) ? $registration->fee : 0) * $
                                     <div class="col-md-4">
                                         <span class="small text-secondary fw-bold">ค่าลงทะเบียน/คน</span>
                                         <strong class="d-block"><?= html_escape($format_money(isset($registration->fee) ? $registration->fee : 0)); ?></strong>
+                                        <?php if (!empty($registration->fee_label_snapshot)): ?><span class="small text-secondary"><?= html_escape($registration->fee_label_snapshot) ?></span><?php endif; ?>
                                     </div>
                                     <div class="col-md-4">
                                         <span class="small text-secondary fw-bold">ยอดที่ควรชำระ</span>

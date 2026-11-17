@@ -20,24 +20,29 @@ class Certificates extends CI_Controller
     {
         if($this->input->method(TRUE)!=='POST') show_404(); $batch=$this->Certificate_model->get_batch($batch_id); if(!$batch) show_404();
         $existing=$this->Certificate_model->get_template($batch_id); $path=$existing?$existing->background_path:'';
+        $number_settings=$this->number_settings($existing);
+        if ($number_settings===FALSE) return $this->fail('ตำแหน่งหรือรูปแบบเลขวุฒิบัตรไม่ถูกต้อง กรุณาตรวจสอบค่าและให้กล่องอยู่ภายในภาพ',$batch_id);
         if(!empty($_FILES['background']['name'])) { $error=$this->upload_background($path); if($error!=='') return $this->fail($error,$batch_id); }
         if($path==='') return $this->fail('กรุณาเลือกภาพพื้นหลังวุฒิบัตร',$batch_id);
         $data=array('background_path'=>$path,'name_x'=>$this->percent('name_x',10),'name_y'=>$this->percent('name_y',45),
             'name_width'=>$this->percent('name_width',80),'font_size'=>max(12,min(72,(float)$this->input->post('font_size'))),
             'font_color'=>preg_match('/^#[0-9a-f]{6}$/i',(string)$this->input->post('font_color'))?$this->input->post('font_color'):'#172033');
-        $this->Certificate_model->save_template($batch_id,$data); $this->session->set_flashdata('success','บันทึกแม่แบบวุฒิบัตรเรียบร้อยแล้ว'); redirect('admin/certificates?batch_id='.$batch_id);
+        $data=array_merge($data,$number_settings);
+        if (!$this->Certificate_model->save_template($batch_id,$data)) return $this->fail('ไม่สามารถบันทึกแม่แบบได้ กรุณาลองอีกครั้ง',$batch_id);
+        $this->session->set_flashdata('success','บันทึกแม่แบบเรียบร้อยแล้ว'); redirect('admin/certificates?batch_id='.$batch_id);
     }
 
     public function issue($participant_id)
     {
         if($this->input->method(TRUE)!=='POST') show_404(); $batch_id=(int)$this->input->post('batch_id'); $invitation_id=(int)$this->input->post('invitation_id');
-        if(!$this->Certificate_model->issue($batch_id,$participant_id,$invitation_id,$this->session->userdata('admin_id'))) return $this->fail('ไม่สามารถออกวุฒิบัตรได้ กรุณาตรวจแม่แบบและเงื่อนไขผู้เข้าอบรม',$batch_id);
+        if(!$this->Certificate_model->issue($batch_id,$participant_id,$invitation_id,$this->session->userdata('admin_id'))) return $this->fail($this->Certificate_model->last_issue_error ?: 'ไม่สามารถออกวุฒิบัตรได้ กรุณาตรวจแม่แบบและเงื่อนไขผู้เข้าอบรม',$batch_id);
         $this->session->set_flashdata('success','ออกวุฒิบัตรเรียบร้อยแล้ว'); redirect('admin/certificates?batch_id='.$batch_id);
     }
 
     public function issue_batch($batch_id)
     {
         if($this->input->method(TRUE)!=='POST') show_404(); $count=$this->Certificate_model->issue_batch($batch_id,$this->session->userdata('admin_id'));
+        if ($this->Certificate_model->last_issue_error) return $this->fail('ออกวุฒิบัตรใหม่แล้ว '.number_format($count).' รายการ — '.$this->Certificate_model->last_issue_error,$batch_id);
         $this->session->set_flashdata('success','ออกวุฒิบัตรใหม่ '.number_format($count).' รายการ'); redirect('admin/certificates?batch_id='.(int)$batch_id);
     }
 
@@ -90,6 +95,32 @@ class Certificates extends CI_Controller
         if($sent===0) { $this->session->set_flashdata('error',$message.' กรุณาตรวจสอบการตั้งค่า SMTP'); }
         else { $this->session->set_flashdata('success',$message); }
         redirect('admin/certificates?batch_id='.(int)$batch_id);
+    }
+
+    private function number_settings($existing)
+    {
+        $settings=certificate_number_defaults();
+        foreach ($settings as $key=>$default) {
+            $value=$this->input->post($key);
+            if ($value===NULL) $value=$existing && isset($existing->$key)?$existing->$key:$default;
+            if (!is_scalar($value)) return FALSE;
+            if ($key==='number_align') {
+                if (!in_array($value,array('L','C','R'),TRUE)) return FALSE;
+            } elseif ($key==='number_font_color') {
+                if (!preg_match('/^#[0-9a-f]{6}$/iD',(string)$value)) return FALSE;
+            } else {
+                if (!is_numeric($value) || !is_finite((float)$value)) return FALSE;
+                $value=(float)$value;
+                $min=$key==='number_width'?1:($key==='number_font_size'?6:0);
+                $max=$key==='number_font_size'?72:100;
+                if ($value<$min || $value>$max) return FALSE;
+                $value=round($value,$key==='number_font_size'?2:3);
+            }
+            $settings[$key]=$value;
+        }
+        $height=max(5,$settings['number_font_size']*25.4/72*1.2)/210*100;
+        if ($settings['number_x']+$settings['number_width']>100.001 || $settings['number_y']+$height>100.001) return FALSE;
+        return $settings;
     }
 
     private function percent($key,$default) { $v=$this->input->post($key); return $v===NULL?$default:max(0,min(100,(float)$v)); }

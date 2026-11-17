@@ -62,6 +62,7 @@ class Home extends CI_Controller {
 
 		$this->load->view('frontend/detail', array(
 			'course' => $course,
+            'fee_options' => $this->course_fee_options($course),
 			'batches' => $this->Batch_model->get_open_by_course($course->id),
 			'course_details' => $this->Course_detail_model->get_by_course($course->id),
 			'instructors' => $this->Course_instructor_model->get_by_course($course->id),
@@ -69,7 +70,14 @@ class Home extends CI_Controller {
 		));
 	}
 
-	public function instructors()
+    private function course_fee_options($course)
+    {
+        if (!isset($course->fee_mode) || $course->fee_mode!=='options') return array();
+        $this->load->model('Pricing_model');
+        return $this->Pricing_model->options($course->id,TRUE);
+    }
+
+    public function instructors()
 	{
 		$this->load->model('Instructor_model');
 

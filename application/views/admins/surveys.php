@@ -57,6 +57,15 @@ $edit = isset($edit_survey) && $edit_survey ? $edit_survey : (object) array(
                                             <a class="btn btn-sm btn-outline-secondary" href="<?= site_url('admin/surveys?edit='.$survey->id); ?>">แก้ไข</a>
                                             <a class="btn btn-sm btn-outline-primary" href="<?= site_url('admin/surveys/questions/'.$survey->id); ?>">คำถาม</a>
                                             <a class="btn btn-sm btn-success" href="<?= site_url('admin/surveys/assign/'.$survey->id); ?>">เปิดใช้</a>
+                                            <?php if (admin_can_delete($this->session) && (int) $survey->question_count === 0 && (int) $survey->assignment_count === 0 && !empty($delete_token)): ?>
+                                                <form class="d-inline js-survey-delete-form" method="post" action="<?= site_url('admin/surveys/delete/'.(int) $survey->id); ?>" data-survey-title="<?= html_escape($survey->title); ?>">
+                                                    <input type="hidden" name="delete_token" value="<?= html_escape($delete_token); ?>">
+                                                    <?php if ($this->config->item('csrf_protection')): ?>
+                                                        <input type="hidden" name="<?= html_escape($this->security->get_csrf_token_name()); ?>" value="<?= html_escape($this->security->get_csrf_hash()); ?>">
+                                                    <?php endif; ?>
+                                                    <button class="btn btn-sm btn-outline-danger" type="submit" disabled>ลบ</button>
+                                                </form>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -140,4 +149,38 @@ $edit = isset($edit_survey) && $edit_survey ? $edit_survey : (object) array(
             <?php endif; ?>
         <?php endif; ?>
     </main>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+(function () {
+    document.querySelectorAll('.js-survey-delete-form').forEach(function (form) {
+        var button = form.querySelector('button');
+        var busy = false;
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            if (busy || typeof Swal === 'undefined') return;
+            busy = true;
+            button.disabled = true;
+            Swal.fire({
+                title: 'ยืนยันการลบชุดแบบประเมิน?',
+                text: 'ต้องการลบ "' + form.dataset.surveyTitle + '" ใช่หรือไม่? ข้อมูลจะถูกลบถาวร',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'ยืนยันลบ',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#d94f45',
+                reverseButtons: true,
+                focusCancel: true
+            }).then(function (result) {
+                if (result.isConfirmed) {
+                    HTMLFormElement.prototype.submit.call(form);
+                } else {
+                    busy = false;
+                    button.disabled = false;
+                }
+            });
+        });
+        if (typeof Swal !== 'undefined') button.disabled = false;
+    });
+}());
+</script>
 <?php $this->load->view('admins/layouts/footer'); ?>

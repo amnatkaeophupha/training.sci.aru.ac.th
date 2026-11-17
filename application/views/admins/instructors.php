@@ -153,9 +153,11 @@ $form_action = $is_edit
                                                     <td>
                                                         <div class="d-flex flex-wrap gap-2">
                                                             <a class="btn btn-sm btn-outline-primary" href="<?= site_url('admin/instructors?edit='.$instructor->id); ?>">แก้ไข</a>
+                                                            <?php if (admin_can_delete($this->session)): ?>
                                                             <form class="js-instructor-delete-form" method="post" action="<?= site_url('admin/instructors/delete/'.$instructor->id); ?>" data-instructor-name="<?= html_escape($instructor->name); ?>">
                                                                 <button class="btn btn-sm btn-outline-danger" type="submit">ลบ</button>
                                                             </form>
+                                                            <?php endif; ?>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -226,7 +228,8 @@ $form_action = $is_edit
 
                                         <div class="col-12">
                                             <label class="form-label fw-bold" for="bio">ประวัติ/ความเชี่ยวชาญ</label>
-                                            <textarea class="form-control" id="bio" name="bio" rows="4"><?= $is_edit ? html_escape($edit_instructor->bio) : ''; ?></textarea>
+                                            <textarea class="form-control" id="bio" name="bio" rows="4" maxlength="1000" aria-describedby="bio-help"><?= $is_edit ? html_escape($edit_instructor->bio) : ''; ?></textarea>
+                                            <div class="form-text" id="bio-help">กรอกได้ไม่เกิน 1,000 ตัวอักษร</div>
                                         </div>
                                     </div>
                                 </div>

@@ -143,7 +143,8 @@ class Course_model extends CI_Model
             'location'          => $data['location'],
             'duration_text'     => $data['duration_text'],
             'capacity'          => (int) $data['capacity'],
-            'fee'               => (float) $data['fee'],
+            'fee'               => $data['fee'],
+            'fee_mode'          => $data['fee_mode'],
             'status'            => (int) $data['status'],
             'is_featured'       => (int) $data['is_featured'],
             'published_at'      => $data['published_at'],
@@ -168,12 +169,34 @@ class Course_model extends CI_Model
                 'location'          => $data['location'],
                 'duration_text'     => $data['duration_text'],
                 'capacity'          => (int) $data['capacity'],
-                'fee'               => (float) $data['fee'],
+                'fee'               => $data['fee'],
+                'fee_mode'          => $data['fee_mode'],
                 'status'            => (int) $data['status'],
                 'is_featured'       => (int) $data['is_featured'],
                 'published_at'      => $data['published_at'],
                 'updated_at'        => date('Y-m-d H:i:s')
             ));
+    }
+
+    public function save_with_fees($id,$data)
+    {
+        $this->load->model('Pricing_model');
+        $debug=$this->db->db_debug; $this->db->db_debug=FALSE;
+        if (!$this->db->trans_begin()) { $this->db->db_debug=$debug; return FALSE; }
+        try {
+            if ($id) {
+                $locked=$this->db->query('SELECT id FROM training_courses WHERE id=? FOR UPDATE',array((int)$id));
+                if (!$locked || $locked->num_rows()!==1) throw new RuntimeException('course lock');
+                $ok=$this->update_course($id,$data);
+                if ($ok) $ok=$this->db->set('pricing_revision','pricing_revision+1',FALSE)->where('id',(int)$id)->update($this->table);
+            } else {
+                $ok=$this->create_course($data); $id=$this->db->insert_id();
+            }
+            if (!$ok || !$this->Pricing_model->save_options($id,$data['fee_options']) || !$this->db->trans_status() || !$this->db->trans_commit()) throw new RuntimeException('course save');
+            $this->db->db_debug=$debug; return TRUE;
+        } catch (Throwable $error) {
+            $this->db->trans_rollback(); $this->db->db_debug=$debug; return FALSE;
+        }
     }
 
     public function delete_course($id)

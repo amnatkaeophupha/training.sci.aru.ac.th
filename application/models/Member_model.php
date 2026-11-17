@@ -194,11 +194,23 @@ class Member_model extends CI_Model {
 			->row_array();
 	}
 
-	public function get_admin_list($query = '', $limit = 50)
+	public function get_admin_list($query = '', $limit = 100, $offset = 0)
 	{
 		$this->db->select('id,title_name,first_name,last_name,position_name,organization_name,email,phone,status,created_at')
 			->from($this->table);
+		$this->apply_admin_search($query);
+		return $this->db->order_by('id', 'DESC')->limit(max(1, (int) $limit), max(0, (int) $offset))->get()->result();
+	}
 
+	public function count_admin_list($query = '')
+	{
+		$this->db->from($this->table);
+		$this->apply_admin_search($query);
+		return (int) $this->db->count_all_results();
+	}
+
+	private function apply_admin_search($query)
+	{
 		$query = trim((string) $query);
 		if ($query !== '')
 		{
@@ -210,8 +222,6 @@ class Member_model extends CI_Model {
 				->or_like('organization_name', $query)
 				->group_end();
 		}
-
-		return $this->db->order_by('id', 'DESC')->limit((int) $limit)->get()->result();
 	}
 
 	public function get_admin_stats()

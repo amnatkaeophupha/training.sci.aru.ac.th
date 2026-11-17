@@ -60,7 +60,7 @@ class Batch_model extends CI_Model
             ->select('training_courses.short_description, training_courses.description')
             ->select('training_courses.cover_image, training_courses.level')
             ->select('training_courses.training_type, training_courses.location, training_courses.duration_text')
-            ->select('training_courses.fee, training_courses.status AS course_status')
+            ->select('training_courses.fee, training_courses.fee_mode, training_courses.status AS course_status')
             ->select('training_courses.is_featured, training_courses.published_at')
             ->select('training_categories.name AS category_name')
             ->from($this->table)
@@ -94,7 +94,7 @@ class Batch_model extends CI_Model
             ->select('training_courses.short_description, training_courses.description')
             ->select('training_courses.cover_image, training_courses.level')
             ->select('training_courses.training_type, training_courses.location, training_courses.duration_text')
-            ->select('training_courses.fee, training_courses.status AS course_status')
+            ->select('training_courses.fee, training_courses.fee_mode, training_courses.status AS course_status')
             ->select('training_categories.name AS category_name')
             ->from($this->table)
             ->join('training_courses', 'training_courses.id = training_batches.course_id', 'inner')
@@ -136,7 +136,7 @@ class Batch_model extends CI_Model
         $registered_courses = $this->db
             ->select('training_registrations.id AS registration_id')
             ->select('training_registrations.registration_code, training_registrations.status AS registration_status')
-            ->select('training_registrations.created_at')
+            ->select('training_registrations.created_at,training_registrations.fee_mode_snapshot,training_registrations.fee_options_snapshot,training_registrations.fee_option_id,training_registrations.fee_label_snapshot,training_registrations.unit_fee_snapshot')
             ->select('training_batches.id AS batch_id')
             ->select('training_batches.batch_no, training_batches.start_date, training_batches.end_date')
             ->select('training_batches.start_time, training_batches.end_time')
@@ -145,7 +145,8 @@ class Batch_model extends CI_Model
             ->select($registration_count_select, FALSE)
             ->select('training_courses.id AS course_id')
             ->select('training_courses.title, training_courses.slug, training_courses.cover_image')
-            ->select('training_courses.training_type, training_courses.location, training_courses.fee')
+            ->select('training_courses.training_type, training_courses.location')
+            ->select('COALESCE(training_registrations.unit_fee_snapshot,training_courses.fee) AS fee',FALSE)
             ->select('training_categories.name AS category_name')
             ->from('training_registrations')
             ->join($this->table, 'training_batches.id = training_registrations.batch_id', 'inner')
@@ -179,7 +180,12 @@ class Batch_model extends CI_Model
 
             $course->participant_count = $participant_count;
             $course->fee_per_person = isset($course->fee) ? (float) $course->fee : 0;
-            $course->payment_total = $course->fee_per_person * $participant_count;
+            $course->payment_total = training_fee_total(isset($course->fee)?$course->fee:'0',$participant_count);
+            if (isset($course->fee_mode_snapshot) && $course->fee_mode_snapshot==='options') {
+                $this->load->model('Pricing_model');
+                $course->fee_choices=json_decode($course->fee_options_snapshot,TRUE);
+                $course->fee_change_locked=$this->Pricing_model->is_locked($course->registration_id,$course->registration_status);
+            }
             $course->payment_id = 0;
             $course->payment_code = '';
             $course->payment_status = 0;
@@ -418,7 +424,7 @@ class Batch_model extends CI_Model
         return $this->db
             ->select('training_registrations.id AS registration_id')
             ->select('training_registrations.registration_code, training_registrations.status AS registration_status')
-            ->select('training_registrations.created_at')
+            ->select('training_registrations.created_at,training_registrations.fee_mode_snapshot,training_registrations.fee_options_snapshot,training_registrations.fee_option_id,training_registrations.fee_label_snapshot,training_registrations.unit_fee_snapshot')
             ->select('training_batches.id AS batch_id')
             ->select('training_batches.batch_no, training_batches.start_date, training_batches.end_date')
             ->select('training_batches.start_time, training_batches.end_time')
@@ -611,7 +617,7 @@ class Batch_model extends CI_Model
         }
 
         $registration = $this->db
-            ->select('training_courses.fee')
+            ->select('COALESCE(training_registrations.unit_fee_snapshot,training_courses.fee) AS fee',FALSE)
             ->from('training_registrations')
             ->join($this->table, 'training_batches.id = training_registrations.batch_id', 'inner')
             ->join('training_courses', 'training_courses.id = training_batches.course_id', 'inner')
@@ -633,7 +639,7 @@ class Batch_model extends CI_Model
             $participant_count = max(1, $participant_count);
         }
 
-        $total_amount = (float) $registration->fee * $participant_count;
+        $total_amount = training_fee_total($registration->fee,$participant_count);
 
         return $this->get_registration_payment_summary($registration_id, $total_amount, TRUE);
     }
@@ -649,7 +655,7 @@ class Batch_model extends CI_Model
             ->select('training_batches.batch_no, training_batches.start_date, training_batches.end_date')
             ->select('training_batches.start_time, training_batches.end_time')
             ->select('training_batches.status AS batch_status')
-            ->select('training_courses.id AS course_id')
+            ->select('training_courses.id AS course_id,training_courses.fee_mode,training_courses.pricing_revision')
             ->select('training_courses.title, training_courses.slug, training_courses.cover_image')
             ->select('training_courses.training_type, training_courses.location')
             ->select('training_categories.name AS category_name')
@@ -736,7 +742,7 @@ class Batch_model extends CI_Model
     }
 
     /** Save both records atomically; do not report success for a partial registration. */
-    public function register_member_with_participant($member, $batch_id)
+    public function register_member_with_participant($member, $batch_id, $option_id=NULL, $revision=NULL)
     {
         if (!$this->registrations_table_exists() || !$this->participants_table_exists()) return FALSE;
 
@@ -749,7 +755,7 @@ class Batch_model extends CI_Model
                 return FALSE;
             }
             $id = $this->create_member_registration($member['id'], $batch_id);
-            if (!$id || !$this->ensure_member_registration_participant($id, $member)
+            if (!$id || !$this->snapshot_registration_fee($id,$batch_id,$option_id,$revision) || !$this->ensure_member_registration_participant($id, $member)
                 || !$this->db->trans_status()) {
                 $this->db->trans_rollback();
                 return FALSE;
@@ -766,6 +772,12 @@ class Batch_model extends CI_Model
         } finally {
             $this->db->db_debug = $db_debug;
         }
+    }
+
+    protected function snapshot_registration_fee($registration_id,$batch_id,$option_id,$revision)
+    {
+        $this->load->model('Pricing_model');
+        return $this->Pricing_model->snapshot_registration($registration_id,$batch_id,$option_id,$revision);
     }
 
     public function create_member_registration($member_id, $batch_id)

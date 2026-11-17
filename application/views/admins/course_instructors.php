@@ -149,9 +149,11 @@ $form_action = $is_edit
                                                     <td>
                                                         <div class="d-flex flex-wrap gap-2">
                                                             <a class="btn btn-sm btn-outline-primary" href="<?= site_url('admin/course-instructors/'.$course->id.'?edit='.$item->id); ?>">แก้ไข</a>
+                                                            <?php if (admin_can_delete($this->session)): ?>
                                                             <form class="js-course-instructor-delete-form" method="post" action="<?= site_url('admin/course-instructors/delete/'.$item->id); ?>" data-instructor-name="<?= html_escape($item->instructor_name ?: 'วิทยากร'); ?>">
                                                                 <button class="btn btn-sm btn-outline-danger" type="submit">ลบ</button>
                                                             </form>
+                                                            <?php endif; ?>
                                                         </div>
                                                     </td>
                                                 </tr>

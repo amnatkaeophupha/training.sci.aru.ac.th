@@ -44,7 +44,8 @@ class Registration_model extends CI_Model
             ->select('training_registrations.status, training_registrations.created_at')
             ->select('members.email, members.title_name, members.first_name, members.last_name, members.phone')
             ->select('training_batches.batch_no, training_batches.start_date, training_batches.end_date')
-            ->select('training_courses.title AS course_title, training_courses.fee')
+            ->select('training_courses.title AS course_title,training_registrations.fee_label_snapshot')
+            ->select('COALESCE(training_registrations.unit_fee_snapshot,training_courses.fee) AS fee',FALSE)
             ->select('training_categories.name AS category_name')
             ->select($participant_count_select, FALSE)
             ->select($payment_paid_select, FALSE)
@@ -213,11 +214,15 @@ class Registration_model extends CI_Model
 
         return $this->db
             ->select('training_registrations.*')
+            ->select($this->payments_table_exists()
+                ? '(SELECT status FROM training_payments WHERE training_payments.registration_id = training_registrations.id ORDER BY id DESC LIMIT 1) AS payment_status'
+                : '0 AS payment_status', FALSE)
             ->select('members.email, members.title_name, members.first_name, members.last_name, members.phone')
             ->select('members.organization_name, members.position_name')
             ->select('training_batches.batch_no, training_batches.start_date, training_batches.end_date')
             ->select('training_batches.start_time, training_batches.end_time, training_batches.capacity')
-            ->select('training_courses.title AS course_title, training_courses.fee, training_courses.location')
+            ->select('training_courses.title AS course_title, training_courses.location')
+            ->select('COALESCE(training_registrations.unit_fee_snapshot,training_courses.fee) AS fee',FALSE)
             ->select('training_courses.training_type')
             ->select('training_categories.name AS category_name')
             ->from('training_registrations')
@@ -260,6 +265,97 @@ class Registration_model extends CI_Model
             ->order_by('id', 'ASC')
             ->get('training_payments')
             ->result();
+    }
+
+    /** Returns payment paths after a committed deletion, or FALSE on failure. */
+    public function delete_registration($registration_id)
+    {
+        $debug = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
+        if (!$this->db->trans_begin()) {
+            $this->db->db_debug = $debug;
+            return FALSE;
+        }
+        $files = array();
+        $locked = $this->db->query('SELECT id, status FROM training_registrations WHERE id = ? FOR UPDATE', array((int) $registration_id));
+        $ok = $locked && $locked->num_rows() === 1;
+
+        if ($ok && $this->payments_table_exists()) {
+            $payments = $this->db->query('SELECT payment_slip, status FROM training_payments WHERE registration_id = ? ORDER BY id ASC FOR UPDATE', array((int) $registration_id));
+            $ok = $payments !== FALSE;
+            if ($ok) {
+                $payment_status = 0;
+                foreach ($payments->result() as $payment) {
+                    $payment_status = (int) $payment->status;
+                    if (!empty($payment->payment_slip)) $files[] = $payment->payment_slip;
+                }
+                $registration_rows = $locked->result();
+                if (admin_registration_delete_locked($registration_rows[0]->status, $payment_status)) {
+                    $this->db->trans_rollback();
+                    $this->db->db_debug = $debug;
+                    return FALSE;
+                }
+                $ok = $this->db->where('registration_id', (int) $registration_id)->delete('training_payments');
+            }
+        }
+        if ($ok && $this->participants_table_exists()) {
+            // Existing foreign keys cascade invitations, responses, answers and audits.
+            $ok = $this->db->where('registration_id', (int) $registration_id)->delete('training_registration_participants');
+        }
+        if ($ok) {
+            $ok = $this->db->where('id', (int) $registration_id)->delete('training_registrations');
+        }
+        if (!$ok || !$this->db->trans_status()) {
+            $this->db->trans_rollback();
+            log_message('error', 'Registration deletion failed: '.(int) $registration_id);
+            $this->db->db_debug = $debug;
+            return FALSE;
+        }
+        $committed = $this->db->trans_commit();
+        if (!$committed) {
+            $this->db->trans_rollback();
+            log_message('error', 'Registration deletion commit failed: '.(int) $registration_id);
+        }
+        $this->db->db_debug = $debug;
+        return $committed ? array_values(array_unique($files)) : FALSE;
+    }
+
+    public function delete_payment_files($files)
+    {
+        $root = realpath(FCPATH.'uploads/payments');
+        $ok = TRUE;
+        foreach (array_unique($files) as $file) {
+            // Only generated upload filenames are eligible; reject traversal and symlinks.
+            if (!preg_match('~\Auploads/payments/[^/\\\\]+\z~D', $file) || strpos($file, "\0") !== FALSE) {
+                log_message('error', 'Rejected payment cleanup path: '.json_encode($file));
+                $ok = FALSE;
+                continue;
+            }
+            $path = FCPATH.$file;
+            if (!file_exists($path) && !is_link($path)) continue;
+            $resolved = realpath($path);
+            if (!$root || !$resolved || is_link($path) || dirname($resolved) !== $root || !is_file($resolved)) {
+                log_message('error', 'Unsafe payment cleanup path: '.json_encode($file));
+                $ok = FALSE;
+                continue;
+            }
+            // Preserve a file still used by any other registration.
+            $debug = $this->db->db_debug;
+            $this->db->db_debug = FALSE;
+            $references = $this->db->query('SELECT id FROM training_payments WHERE payment_slip = ? LIMIT 1', array($file));
+            $this->db->db_debug = $debug;
+            if ($references === FALSE) {
+                log_message('error', 'Could not check payment file references: '.json_encode($file));
+                $ok = FALSE;
+                continue;
+            }
+            if ($references->num_rows() > 0) continue;
+            if (!@unlink($resolved)) {
+                log_message('error', 'Could not delete payment file: '.json_encode($file));
+                $ok = FALSE;
+            }
+        }
+        return $ok;
     }
 
     public function update_status($registration_id, $status)

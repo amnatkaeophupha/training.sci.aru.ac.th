@@ -13,11 +13,39 @@ class Surveys extends CI_Controller
     public function index()
     {
         $edit_id = (int) $this->input->get('edit', TRUE);
+        if (!$this->session->userdata('survey_delete_token')) {
+            $this->session->set_userdata('survey_delete_token', bin2hex(random_bytes(32)));
+        }
         $this->load->view('admins/surveys', array(
+            'delete_token'=>$this->session->userdata('survey_delete_token'),
             'tables_ready'=>$this->Survey_model->tables_ready(), 'surveys'=>$this->Survey_model->get_all(),
             'edit_survey'=>$edit_id ? $this->Survey_model->get($edit_id) : NULL,
             'assignments'=>$this->Survey_model->tables_ready() ? $this->Survey_model->get_assignments() : array()
         ));
+    }
+
+    public function delete($id)
+    {
+        if (!admin_require_delete_permission($this->session, 'admin/surveys')) return;
+        if ($this->input->method(TRUE) !== 'POST') { show_404(); return; }
+
+        $token = $this->input->post('delete_token');
+        $expected = $this->session->userdata('survey_delete_token');
+        if (!is_string($token) || !is_string($expected) || $expected === '' || !hash_equals($expected, $token)) {
+            return $this->fail('คำขอไม่ถูกต้อง กรุณาโหลดหน้าใหม่แล้วลองอีกครั้ง', 'admin/surveys');
+        }
+
+        $result = $this->Survey_model->delete_empty_survey((int) $id);
+        if ($result !== 'deleted') {
+            $messages = array(
+                'missing'=>'ไม่พบชุดแบบประเมิน หรือรายการถูกลบไปแล้ว',
+                'has_questions'=>'ลบไม่ได้ ชุดแบบประเมินนี้มีคำถามอยู่',
+                'in_use'=>'ลบไม่ได้ ชุดแบบประเมินนี้ถูกนำไปใช้กับรุ่นอบรมแล้ว'
+            );
+            return $this->fail(isset($messages[$result]) ? $messages[$result] : 'ไม่สามารถลบชุดแบบประเมินได้ กรุณาลองอีกครั้ง', 'admin/surveys');
+        }
+        $this->session->set_flashdata('success', 'ลบชุดแบบประเมินเรียบร้อยแล้ว');
+        redirect('admin/surveys');
     }
 
     public function save($id = 0)
@@ -48,7 +76,12 @@ class Surveys extends CI_Controller
         $this->session->set_flashdata('success', 'เพิ่มคำถามเรียบร้อยแล้ว'); redirect('admin/surveys/questions/'.$survey_id);
     }
 
-    public function delete_question($survey_id, $question_id) { $this->Survey_model->delete_question($survey_id,$question_id); redirect('admin/surveys/questions/'.$survey_id); }
+    public function delete_question($survey_id, $question_id)
+    {
+        if (!admin_require_delete_permission($this->session, 'admin/surveys/questions/'.(int) $survey_id)) return;
+        $this->Survey_model->delete_question($survey_id,$question_id);
+        redirect('admin/surveys/questions/'.$survey_id);
+    }
     public function move_question($survey_id, $question_id, $direction) { $this->Survey_model->move_question($survey_id,$question_id,$direction); redirect('admin/surveys/questions/'.$survey_id); }
 
     public function assign($survey_id)

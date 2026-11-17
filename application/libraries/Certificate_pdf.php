@@ -33,8 +33,27 @@ class Certificate_pdf
         $pdf->SetFont('notosansthai','',max(12,(float)$certificate->font_size));
         $pdf->SetXY(297*(float)$certificate->name_x/100,210*(float)$certificate->name_y/100);
         $pdf->Cell(297*(float)$certificate->name_width/100,12,$certificate->recipient_name,0,0,'C',FALSE,'',1,FALSE,'T','M');
-        $pdf->SetFont('notosansthai','',9); $pdf->SetTextColor(40,40,40); $pdf->SetXY(210,196);
-        $pdf->Cell(75,5,'เลขที่ '.$certificate->certificate_no,0,0,'R');
+        $number=certificate_number_defaults();
+        foreach ($number as $key=>$default) if (isset($certificate->$key)) $number[$key]=$certificate->$key;
+        $size=max(6,min(72,(float)$number['number_font_size']));
+        $height=max(5,$size*25.4/72*1.2);
+        // The bundled Thai font is a Thai-only subset, without Latin letters/digits.
+        $pdf->SetFont('helvetica','',$size);
+        list($red,$green,$blue)=$this->hex_rgb($number['number_font_color']); $pdf->SetTextColor($red,$green,$blue);
+        $pdf->setCellPaddings(0,0,0,0); $pdf->setCellHeightRatio(1.2);
+        $pdf->SetXY(297*(float)$number['number_x']/100,210*(float)$number['number_y']/100);
+        $align=in_array($number['number_align'],array('L','C','R'),TRUE)?$number['number_align']:'R';
+        $width=297*(float)$number['number_width']/100;
+        $text=certificate_number_text($certificate->certificate_no);
+        if ($text===$certificate->certificate_no) {
+            $pdf->Cell($width,$height,$text,0,0,$align,FALSE,'',1,FALSE,'T','T');
+        } else {
+            $text_width=$pdf->GetStringWidth('เลขที่ ','notosansthai','',$size)+$pdf->GetStringWidth($certificate->certificate_no,'helvetica','',$size);
+            $fit_size=$size*min(1,$width/max(1,$text_width));
+            $html='<span style="font-family:notosansthai;font-size:'.$fit_size.'pt">เลขที่ </span>'
+                .'<span style="font-family:helvetica;font-size:'.$fit_size.'pt">'.htmlspecialchars($certificate->certificate_no,ENT_QUOTES,'UTF-8').'</span>';
+            $pdf->writeHTMLCell($width,$height,'','',$html,0,0,FALSE,TRUE,$align,TRUE);
+        }
         return $pdf->Output($certificate->certificate_no.'.pdf',$destination);
     }
 

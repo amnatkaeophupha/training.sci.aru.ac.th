@@ -3,6 +3,7 @@
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 define('BASEPATH', __DIR__.'/../system/');
 require __DIR__.'/../application/helpers/registration_helper.php';
+require __DIR__.'/../application/helpers/pricing_helper.php';
 class CI_Controller {}
 class CI_Model {}
 class RedirectResult extends Exception {}
@@ -119,6 +120,7 @@ class TestDB {
     function trans_commit() { $this->events[]='commit'; return TRUE; }
 }
 class AtomicBatch extends Batch_model {
+    protected function snapshot_registration_fee($id,$batch,$option,$revision) { return TRUE; }
     public $ready=TRUE, $open=TRUE, $id=42, $participant=TRUE, $throws=FALSE;
     function registrations_table_exists() { return $this->ready; }
     function participants_table_exists() { return $this->ready; }
@@ -171,6 +173,7 @@ class MemoryResult {
     function row() { return $this->rows ? (object)$this->rows[0] : NULL; }
 }
 class DuplicateBatch extends Batch_model {
+    protected function snapshot_registration_fee($id,$batch,$option,$revision) { return TRUE; }
     function get_selectable_frontend_batch($id) { return TRUE; }
 }
 $m=new DuplicateBatch(); $m->db=new RegistrationMemoryDB();

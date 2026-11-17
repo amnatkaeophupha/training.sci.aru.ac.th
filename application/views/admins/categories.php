@@ -123,9 +123,11 @@ $form_action = $is_edit
                                                     <td>
                                                         <div class="d-flex flex-wrap gap-2">
                                                             <a class="btn btn-sm btn-outline-primary" href="<?= site_url('admin/categories?edit='.$category->id); ?>">แก้ไข</a>
+                                                            <?php if (admin_can_delete($this->session)): ?>
                                                             <form method="post" action="<?= site_url('admin/categories/delete/'.$category->id); ?>" onsubmit="return confirm('ยืนยันการลบหมวดหมู่หลักสูตรนี้?');">
                                                                 <button class="btn btn-sm btn-outline-danger" type="submit">ลบ</button>
                                                             </form>
+                                                            <?php endif; ?>
                                                         </div>
                                                     </td>
                                                 </tr>

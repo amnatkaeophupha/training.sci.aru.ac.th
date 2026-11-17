@@ -19,7 +19,7 @@
         </section>
         <div class="card border-0 shadow-sm">
             <div class="card-body">
-                <form class="row g-2 mb-4" method="get">
+                <form class="row g-2 mb-4" method="get" action="<?= site_url('admin/members') ?>">
                     <div class="col-md-9"><input class="form-control" name="q" value="<?= html_escape($query) ?>" placeholder="ค้นหาชื่อ อีเมล โทรศัพท์ หรือหน่วยงาน"></div>
                     <div class="col-md-3 d-grid"><button class="btn btn-primary">ค้นหา</button></div>
                 </form>
@@ -33,11 +33,18 @@
                         <td><?= html_escape($member->position_name ?: '-') ?><br><span class="small text-secondary"><?= html_escape($member->organization_name ?: '-') ?></span></td>
                         <td><span class="badge <?= (int)$member->status===1?'text-bg-success':'text-bg-secondary' ?>"><?= (int)$member->status===1?'ใช้งาน':'ปิดใช้งาน' ?></span></td>
                         <td><?= html_escape($member->created_at ?: '-') ?></td>
-                        <td><div class="d-flex gap-2"><button type="button" class="btn btn-sm btn-outline-primary js-edit-member" data-bs-toggle="modal" data-bs-target="#memberModal" data-id="<?= (int)$member->id ?>" data-title-name="<?= html_escape($member->title_name) ?>" data-first-name="<?= html_escape($member->first_name) ?>" data-last-name="<?= html_escape($member->last_name) ?>" data-position-name="<?= html_escape($member->position_name) ?>" data-organization-name="<?= html_escape($member->organization_name) ?>" data-email="<?= html_escape($member->email) ?>" data-phone="<?= html_escape($member->phone) ?>" data-status="<?= (int)$member->status ?>">แก้ไข</button><?php if ($this->session->userdata('admin_role') !== 'staff'): ?><form class="js-delete-member" method="post" action="<?= site_url('admin/members/delete/'.$member->id) ?>" data-name="<?= html_escape(trim($member->first_name.' '.$member->last_name)) ?>"><button class="btn btn-sm btn-outline-danger">ลบ</button></form><?php endif; ?></div></td>
+                        <td><div class="d-flex gap-2"><button type="button" class="btn btn-sm btn-outline-primary js-edit-member" data-bs-toggle="modal" data-bs-target="#memberModal" data-id="<?= (int)$member->id ?>" data-title-name="<?= html_escape($member->title_name) ?>" data-first-name="<?= html_escape($member->first_name) ?>" data-last-name="<?= html_escape($member->last_name) ?>" data-position-name="<?= html_escape($member->position_name) ?>" data-organization-name="<?= html_escape($member->organization_name) ?>" data-email="<?= html_escape($member->email) ?>" data-phone="<?= html_escape($member->phone) ?>" data-status="<?= (int)$member->status ?>">แก้ไข</button><?php if (admin_can_delete($this->session)): ?><form class="js-delete-member" method="post" action="<?= site_url('admin/members/delete/'.$member->id) ?>" data-name="<?= html_escape(trim($member->first_name.' '.$member->last_name)) ?>"><button class="btn btn-sm btn-outline-danger">ลบ</button></form><?php endif; ?></div></td>
                     </tr><?php endforeach; ?>
                     </tbody>
                 </table></div>
-                <?php if (count($members) >= 50): ?><p class="small text-secondary mb-0">แสดง 50 รายการล่าสุด กรุณาใช้ช่องค้นหาเพื่อค้นหาสมาชิกเพิ่มเติม</p><?php endif; ?>
+                <?php if (isset($total_members)): ?>
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mt-3">
+                        <p class="small text-secondary mb-0" role="status">แสดงรายการ <?= number_format($range_start) ?>–<?= number_format($range_end) ?> จากทั้งหมด <?= number_format($total_members) ?> รายการ</p>
+                        <?php if (!empty($pagination_links)): ?>
+                            <nav aria-label="หน้ารายชื่อสมาชิก"><?= $pagination_links ?></nav>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
         <div class="modal fade" id="memberModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg"><div class="modal-content"><form method="post" id="member-form"><div class="modal-header member-modal-header"><h2 class="modal-title fs-5" id="member-modal-title">เพิ่มสมาชิก</h2><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="ปิด"></button></div><div class="modal-body"><div class="row g-3">

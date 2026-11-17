@@ -181,7 +181,7 @@ if (!empty($edit_course->published_at)) {
                                                     <td><?= html_escape($course->category_name ?: '-'); ?></td>
                                                     <td><?= html_escape(isset($type_labels[$course->training_type]) ? $type_labels[$course->training_type] : $course->training_type); ?></td>
                                                     <td><?= number_format((int) $course->capacity); ?></td>
-                                                    <td><?= number_format((float) $course->fee, 2); ?></td>
+                                                    <td><?= isset($course->fee_mode) && $course->fee_mode==='options'?'เริ่มต้น ':'' ?><?= number_format((float) $course->fee, 2); ?></td>
                                                     <td>
                                                         <span class="badge <?= isset($status_classes[$course_status]) ? $status_classes[$course_status] : 'text-bg-secondary'; ?>">
                                                             <?= html_escape(isset($status_labels[$course_status]) ? $status_labels[$course_status] : $course->status); ?>
@@ -192,7 +192,7 @@ if (!empty($edit_course->published_at)) {
                                                             <a class="btn btn-sm btn-outline-primary" href="<?= site_url('admin/courses?edit='.$course->id); ?>">แก้ไข</a>
                                                             <a class="btn btn-sm btn-outline-info" href="<?= site_url('admin/course-details/'.$course->id); ?>">รายละเอียด</a>
                                                             <a class="btn btn-sm btn-outline-success" href="<?= site_url('admin/course-instructors/'.$course->id); ?>">วิทยากร</a>
-                                                            <?php if ($this->session->userdata('admin_role') !== 'staff'): ?>
+                                                            <?php if (admin_can_delete($this->session)): ?>
                                                             <?php if ((int) $course->batch_count > 0): ?>
                                                                 <button class="btn btn-sm btn-outline-danger" type="button" disabled title="มีรุ่นอบรม ไม่สามารถลบได้">ลบ</button>
                                                                 <small class="text-secondary align-self-center">มีรุ่นอบรม <?= number_format((int) $course->batch_count); ?> รุ่น</small>
@@ -302,10 +302,12 @@ if (!empty($edit_course->published_at)) {
                                             <input class="form-control" id="capacity" type="number" name="capacity" value="<?= (int) $edit_course->capacity; ?>" min="0">
                                         </div>
 
-                                        <div class="col-12 col-md-6 col-xl-3">
+                                        <div class="col-12 col-md-6 col-xl-3" id="fixed-fee-field">
                                             <label class="form-label fw-bold" for="fee">ค่าสมัคร</label>
                                             <input class="form-control" id="fee" type="number" name="fee" value="<?= html_escape((string) $edit_course->fee); ?>" min="0" step="0.01">
                                         </div>
+
+                                        <?php include __DIR__.'/course_fee_fields.php'; ?>
 
                                         <div class="col-12 col-md-6 col-xl-3">
                                             <label class="form-label fw-bold" for="status">สถานะ</label>
@@ -376,4 +378,5 @@ if (!empty($edit_course->published_at)) {
                 });
             });
         </script>
+<script src="<?= base_url('assets/js/course-fees.js') ?>"></script>
 <?php $this->load->view('admins/layouts/footer'); ?>

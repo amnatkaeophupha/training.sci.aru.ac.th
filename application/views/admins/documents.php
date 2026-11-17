@@ -157,9 +157,11 @@ $format_size = function ($bytes) {
                                                     <td>
                                                         <div class="d-flex flex-wrap gap-2">
                                                             <a class="btn btn-sm btn-outline-primary" href="<?= site_url('admin/documents?edit='.$document->id); ?>">แก้ไข</a>
+                                                            <?php if (admin_can_delete($this->session)): ?>
                                                             <form class="js-document-delete-form" method="post" action="<?= site_url('admin/documents/delete/'.$document->id); ?>" data-document-title="<?= html_escape($document->title); ?>">
                                                                 <button class="btn btn-sm btn-outline-danger" type="submit">ลบ</button>
                                                             </form>
+                                                            <?php endif; ?>
                                                         </div>
                                                     </td>
                                                 </tr>

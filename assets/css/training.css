@@ -1523,6 +1523,115 @@
 	line-height: 1.4;
 }
 
+.member-course__fee-card {
+	min-width: 0;
+	padding: 20px;
+	border: 1px solid #d6e3f1;
+	border-radius: 16px;
+	background: #f7faff;
+}
+
+.member-course__fee-heading {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 12px;
+	margin-bottom: 16px;
+}
+
+.member-course__fee-eyebrow {
+	display: block;
+	margin-bottom: 4px;
+	color: #537194;
+	font-size: 12px;
+	font-weight: 700;
+}
+
+.member-course__fee-heading h4 {
+	margin: 0;
+	color: #193d66;
+	font-size: 17px;
+	line-height: 1.5;
+}
+
+.member-course__fee-badge {
+	padding: 5px 10px;
+	border-radius: 999px;
+	background: #e4f3ec;
+	color: #226449;
+	font-size: 12px;
+	font-weight: 700;
+	line-height: 1.5;
+}
+
+.member-course__fee-current {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 12px 20px;
+	padding: 14px 16px;
+	border: 1px solid #e1e8f1;
+	border-radius: 12px;
+	background: #fff;
+}
+
+.member-course__fee-current > div { min-width: 0; flex: 1 1 180px; }
+.member-course__fee-current > div > span { display: block; margin-bottom: 4px; color: #64748b; font-size: 12px; }
+.member-course__fee-current strong { color: #203f63; font-weight: 800; overflow-wrap: anywhere; }
+.member-course__fee-current p { margin: 0; color: #53657b; font-size: 13px; }
+.member-course__fee-current p strong { font-size: 20px; font-variant-numeric: tabular-nums; }
+.member-course__fee-current p > span { margin: 0 6px; color: #8492a6; }
+.member-course__fee-form { margin-top: 18px; }
+.member-course__fee-fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.member-course__fee-fieldset legend { float: none; width: auto; margin: 0 0 10px; color: #334b67; font-size: 14px; font-weight: 700; }
+.member-course__fee-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 10px; }
+.member-course__fee-option { position: relative; min-width: 0; margin: 0; cursor: pointer; }
+.member-course__fee-option input { position: absolute; top: 20px; left: 16px; z-index: 1; width: 18px; height: 18px; margin: 0; accent-color: #245d8f; cursor: pointer; }
+.member-course__fee-option-content { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; height: 100%; min-height: 84px; padding: 16px 14px 16px 46px; border: 1px solid #dce4ee; border-radius: 12px; background: #fff; transition: background .15s, border-color .15s, box-shadow .15s; }
+.member-course__fee-option:hover .member-course__fee-option-content { border-color: #93b2d3; }
+.member-course__fee-option input:checked + .member-course__fee-option-content { border-color: #3975af; background: #edf5ff; box-shadow: 0 0 0 1px #3975af; }
+.member-course__fee-option input:focus-visible + .member-course__fee-option-content { outline: 3px solid #8bb9e8; outline-offset: 3px; }
+.member-course__fee-option-name { min-width: 0; color: #263f5c; font-size: 14px; font-weight: 700; line-height: 1.6; overflow-wrap: anywhere; }
+.member-course__fee-option-name small { display: table; margin-top: 6px; padding: 1px 7px; border-radius: 5px; background: #dceafa; color: #245d8f; font-size: 11px; font-weight: 600; }
+.member-course__fee-option-price { flex-shrink: 0; text-align: right; color: #203f63; }
+.member-course__fee-option-price strong { display: block; font-size: 18px; line-height: 1.4; font-variant-numeric: tabular-nums; }
+.member-course__fee-option-price small { display: block; color: #667b92; font-size: 11px; font-weight: 400; }
+.member-course__fee-help { margin: 10px 0 0; color: #60758d; font-size: 12px; line-height: 1.7; }
+.member-course__fee-preview { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; margin-top: 16px; padding: 14px 16px; border-radius: 12px; background: #e9f3ff; }
+.member-course__fee-preview[hidden] { display: none; }
+.member-course__fee-preview > div { min-width: 0; }
+.member-course__fee-preview > div > span { display: block; color: #5b718b; font-size: 12px; }
+.member-course__fee-preview strong { display: block; margin-top: 4px; color: #334b67; font-size: 17px; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.member-course__fee-preview > div:last-child strong { color: #185b99; font-size: 21px; }
+.member-course__fee-preview small { display: block; margin-top: 4px; color: #5b718b; font-size: 12px; }
+.member-course__fee-preview-arrow { color: #6a8fb6; font-size: 22px; }
+.member-course__fee-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; padding-top: 16px; border-top: 1px solid #dfe8f3; }
+.member-course__fee-actions p { flex: 1 1 220px; margin: 0; color: #60758d; font-size: 12px; line-height: 1.7; }
+.member-course__fee-actions > div { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.member-course__fee-reset { padding: 10px 6px; border: 0; border-radius: 6px; background: transparent; color: #526b85; font: inherit; font-size: 13px; cursor: pointer; }
+.member-course__fee-reset:focus-visible { outline: 3px solid #8bb9e8; }
+.btn.member-course__fee-save { min-height: 42px; padding: 10px 16px; border: 1px solid #245d8f; border-radius: 9px; background: #245d8f; color: #fff; font-size: 13px; font-weight: 700; }
+.btn.member-course__fee-save:hover { background: #1d4b73; }
+.btn.member-course__fee-save:disabled { border-color: #d7e0eb; background: #e4ebf3; color: #52677f; cursor: not-allowed; }
+.member-course__fee-card--locked { border-color: #e0e6ed; background: #f8fafc; }
+.member-course__fee-card--locked .member-course__fee-badge { background: #e8edf3; color: #526579; }
+.member-course__fee-locked-note { margin: 12px 0 0; color: #60758d; font-size: 13px; line-height: 1.8; }
+
+@media (max-width: 640px) {
+	.member-course__fee-card { padding: 16px; border-radius: 12px; }
+	.member-course__fee-heading h4 { font-size: 16px; }
+	.member-course__fee-options { grid-template-columns: 1fr; }
+	.member-course__fee-option-content { flex-direction: column; gap: 8px; }
+	.member-course__fee-option-price { text-align: left; }
+	.member-course__fee-preview { grid-template-columns: 1fr; gap: 6px; }
+	.member-course__fee-preview-arrow { display: none; }
+	.member-course__fee-preview > div:last-child { padding-top: 10px; border-top: 1px solid #cddff2; }
+	.member-course__fee-actions > div { width: 100%; }
+	.btn.member-course__fee-save { flex: 1; }
+}
+
 .member-course__payment {
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2225,6 +2334,40 @@
 	margin-top: 6px;
 	color: #343a40;
 	font-size: 17px;
+}
+
+.course-fees { border-color: #d7e4f2; }
+.course-fees__heading { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+.course-fees__heading > div { flex: 1 1 240px; min-width: 0; }
+.course-fees__eyebrow { display: block; margin-bottom: 6px; color: #537194; font-size: 12px; font-weight: 700; }
+.course-fees .course-fees__heading h3 { margin: 0; color: #193d66; font-size: 23px; line-height: 1.5; }
+.course-fees .course-fees__intro { margin: 8px 0 0; color: #65778e; font-size: 14px; line-height: 1.8; }
+.course-fees__count { padding: 6px 12px; border: 1px solid #dce8f5; border-radius: 999px; background: #f0f6fd; color: #365f89; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.course-fees__options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 14px; margin: 0; padding: 0; list-style: none; }
+.course-fees__option { display: flex; flex-direction: column; justify-content: space-between; min-width: 0; gap: 22px; padding: 20px; border: 1px solid #dbe6f2; border-radius: 14px; background: #f7faff; }
+.course-fees__option-label { display: block; margin-bottom: 8px; color: #647e9b; font-size: 12px; font-weight: 600; }
+.course-fees__option h4 { margin: 0; color: #243f5f; font-size: 18px; font-weight: 700; line-height: 1.7; overflow-wrap: anywhere; }
+.course-fees__price { padding-top: 16px; border-top: 1px solid #dfe8f4; }
+.course-fees__price strong { display: block; color: #245d8f; font-size: 32px; line-height: 1.4; font-weight: 800; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.course-fees__price > span { display: block; margin-top: 4px; color: #657c94; font-size: 13px; }
+.course-fees__option--free { border-color: #d4e9e0; background: #f3faf6; }
+.course-fees__option--free .course-fees__price { border-color: #d7e9df; }
+.course-fees__option--free .course-fees__price strong { color: #27684e; font-size: 25px; }
+.course-fees__footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-top: 20px; padding-top: 18px; border-top: 1px solid #e3eaf2; }
+.course-fees__note { flex: 1 1 250px; min-width: 0; }
+.course-fees__note > strong { display: block; color: #334f70; font-size: 14px; line-height: 1.6; }
+.course-fees .course-fees__note p { margin: 5px 0 0; color: #677b93; font-size: 13px; line-height: 1.8; }
+.btn.course-fees__register { display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 44px; padding: 11px 16px; border: 1px solid #245d8f; border-radius: 9px; background: #245d8f; color: #fff; font-size: 13px; font-weight: 700; text-align: center; }
+.btn.course-fees__register:hover { background: #1d4b73; }
+.btn.course-fees__register:focus-visible { outline: 3px solid #8bb9e8; outline-offset: 3px; }
+.course-fees__unavailable { color: #66788d; font-size: 13px; }
+@media (max-width: 640px) {
+	.course-fees { padding: 18px; }
+	.course-fees .course-fees__heading h3 { font-size: 20px; }
+	.course-fees__options { grid-template-columns: 1fr; }
+	.course-fees__option { padding: 18px; gap: 16px; }
+	.course-fees__price strong { font-size: 28px; }
+	.btn.course-fees__register { width: 100%; }
 }
 
 .list {

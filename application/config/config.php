@@ -26,8 +26,8 @@ date_default_timezone_set('Asia/Bangkok');
 | a PHP script and you can easily do that on your own.
 |
 */
-$config['base_url'] = 'https://www.aru.ac.th/sci/training/';
-
+#$config['base_url'] = 'https://www.aru.ac.th/sci/training/';
+$config['base_url'] = 'http://localhost/training';
 /*
 |--------------------------------------------------------------------------
 | Index File

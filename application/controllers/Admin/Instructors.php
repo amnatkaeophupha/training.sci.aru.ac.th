@@ -98,6 +98,8 @@ class Instructors extends CI_Controller
 
     public function delete($id)
     {
+        if (!admin_require_delete_permission($this->session, 'admin/instructors')) return;
+
         $id = (int) $id;
 
         if (!$this->Instructor_model->get_by_id($id)) {
@@ -186,6 +188,10 @@ class Instructors extends CI_Controller
 
         if ($data['email'] !== '' && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
             return 'รูปแบบอีเมลไม่ถูกต้อง';
+        }
+
+        if (mb_strlen($data['bio'], 'UTF-8') > 1000) {
+            return 'ประวัติ/ความเชี่ยวชาญต้องไม่เกิน 1,000 ตัวอักษร';
         }
 
         return '';

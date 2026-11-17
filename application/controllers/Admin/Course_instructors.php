@@ -105,6 +105,8 @@ class Course_instructors extends CI_Controller
 
     public function delete($id)
     {
+        if (!admin_require_delete_permission($this->session, 'admin/courses')) return;
+
         $id = (int) $id;
         $link = $this->Course_instructor_model->get_by_id($id);
 

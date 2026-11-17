@@ -17,6 +17,6 @@
 	<?php if (!empty($extra_head)): ?>
 		<?php echo $extra_head; ?>
 	<?php endif; ?>
-	<link href="<?php echo base_url('assets/css/training.css?v=course-image-20260528'); ?>" rel="stylesheet" type="text/css">
+	<link href="<?php echo base_url('assets/css/training.css?v=course-fee-detail-20261116'); ?>" rel="stylesheet" type="text/css">
 </head>
 <body class="<?php echo html_escape($body_class); ?>">

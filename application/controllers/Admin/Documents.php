@@ -100,6 +100,8 @@ class Documents extends CI_Controller
 
     public function delete($id)
     {
+        if (!admin_require_delete_permission($this->session, 'admin/documents')) return;
+
         $id = (int) $id;
         $document = $this->Document_model->get_by_id($id);
 

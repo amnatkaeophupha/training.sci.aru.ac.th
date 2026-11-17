@@ -164,9 +164,11 @@ $section_classes = array(
                                                     <td>
                                                         <div class="d-flex flex-wrap gap-2">
                                                             <a class="btn btn-sm btn-outline-primary" href="<?= site_url('admin/course-details/'.$course->id.'?edit='.$detail->id); ?>">แก้ไข</a>
+                                                            <?php if (admin_can_delete($this->session)): ?>
                                                             <form class="js-course-detail-delete-form" method="post" action="<?= site_url('admin/course-details/delete/'.$detail->id); ?>" data-detail-title="<?= html_escape($detail->title ?: $section_label); ?>">
                                                                 <button class="btn btn-sm btn-outline-danger" type="submit">ลบ</button>
                                                             </form>
+                                                            <?php endif; ?>
                                                         </div>
                                                     </td>
                                                 </tr>

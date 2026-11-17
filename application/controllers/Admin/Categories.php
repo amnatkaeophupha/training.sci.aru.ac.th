@@ -74,6 +74,8 @@ class Categories extends CI_Controller
 
     public function delete($id)
     {
+        if (!admin_require_delete_permission($this->session, 'admin/categories')) return;
+
         $id = (int) $id;
 
         if (!$this->Category_model->get_by_id($id)) {

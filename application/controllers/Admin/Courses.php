@@ -20,6 +20,7 @@ class Courses extends CI_Controller
         $this->load->library('session');
         $this->load->model('Course_model');
         $this->load->model('Category_model');
+        $this->load->model('Pricing_model');
 
         if (!$this->session->userdata('admin_logged_in')) {
             redirect('admin');
@@ -36,6 +37,7 @@ class Courses extends CI_Controller
             'categories' => $this->Category_model->get_all(),
             'stats' => $this->Course_model->get_stats(),
             'edit_course' => $edit_course,
+            'fee_options' => $edit_course ? $this->Pricing_model->options($edit_course->id) : array(),
             'statuses' => $this->statuses,
             'training_types' => $this->training_types
         ));
@@ -45,6 +47,7 @@ class Courses extends CI_Controller
     {
         $data = $this->get_post_data();
         $error = $this->validate_course($data);
+        if ($error==='') $error=$this->Pricing_model->validate_configuration($data);
 
         if ($error !== '') {
             $this->session->set_flashdata('error', $error);
@@ -60,7 +63,10 @@ class Courses extends CI_Controller
             return;
         }
 
-        $this->Course_model->create_course($data);
+        if (!$this->Course_model->save_with_fees(0,$data)) {
+            $this->session->set_flashdata('error','ไม่สามารถบันทึกหลักสูตรและเงื่อนไขราคาได้');
+            redirect('admin/courses'); return;
+        }
         $this->session->set_flashdata('success', 'เพิ่มหลักสูตรเรียบร้อยแล้ว');
         redirect('admin/courses');
     }
@@ -77,6 +83,7 @@ class Courses extends CI_Controller
 
         $data = $this->get_post_data($course->cover_image);
         $error = $this->validate_course($data, $id);
+        if ($error==='') $error=$this->Pricing_model->validate_configuration($data);
 
         if ($error !== '') {
             $this->session->set_flashdata('error', $error);
@@ -92,18 +99,17 @@ class Courses extends CI_Controller
             return;
         }
 
-        $this->Course_model->update_course($id, $data);
+        if (!$this->Course_model->save_with_fees($id,$data)) {
+            $this->session->set_flashdata('error','ไม่สามารถบันทึกหลักสูตรและเงื่อนไขราคาได้');
+            redirect('admin/courses?edit='.(int)$id); return;
+        }
         $this->session->set_flashdata('success', 'แก้ไขหลักสูตรเรียบร้อยแล้ว');
         redirect('admin/courses');
     }
 
     public function delete($id)
     {
-        if ($this->session->userdata('admin_role') === 'staff') {
-            $this->session->set_flashdata('error', 'คุณไม่มีสิทธิ์ลบหลักสูตรอบรม');
-            redirect('admin/courses');
-            return;
-        }
+        if (!admin_require_delete_permission($this->session, 'admin/courses')) return;
 
         $id = (int) $id;
 
@@ -142,7 +148,9 @@ class Courses extends CI_Controller
             'location' => trim((string) $this->input->post('location', TRUE)),
             'duration_text' => trim((string) $this->input->post('duration_text', TRUE)),
             'capacity' => max(0, (int) $this->input->post('capacity', TRUE)),
-            'fee' => max(0, (float) $this->input->post('fee', TRUE)),
+            'fee' => $this->input->post('fee', TRUE) === NULL ? '0' : $this->input->post('fee', TRUE),
+            'fee_mode' => $this->input->post('fee_mode', TRUE) ?: 'fixed',
+            'fee_options' => $this->input->post('fee_options', TRUE) === NULL ? array() : $this->input->post('fee_options', TRUE),
             'status' => (int) $this->input->post('status', TRUE),
             'is_featured' => $this->input->post('is_featured', TRUE) === '1' ? 1 : 0,
             'published_at' => $this->normalize_datetime($this->input->post('published_at', TRUE))

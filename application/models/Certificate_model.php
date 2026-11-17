@@ -43,6 +43,22 @@ class Certificate_model extends CI_Model
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
         if(!$this->db->field_exists('active_key','training_certificates'))
             $this->db->query("ALTER TABLE training_certificates ADD active_key VARCHAR(60) NULL AFTER certificate_no, ADD UNIQUE KEY uq_certificate_active (active_key)");
+        $columns = array(
+            'number_x'=>"DECIMAL(6,3) NOT NULL DEFAULT 70.707",
+            'number_y'=>"DECIMAL(6,3) NOT NULL DEFAULT 93.333",
+            'number_width'=>"DECIMAL(6,3) NOT NULL DEFAULT 25.253",
+            'number_font_size'=>"DECIMAL(6,2) NOT NULL DEFAULT 9.00",
+            'number_font_color'=>"VARCHAR(7) NOT NULL DEFAULT '#282828'",
+            'number_align'=>"CHAR(1) NOT NULL DEFAULT 'R'"
+        );
+        foreach ($columns as $column=>$definition) {
+            if (!$this->db->field_exists($column, 'training_certificate_templates'))
+                $this->db->query('ALTER TABLE training_certificate_templates ADD COLUMN IF NOT EXISTS '.$column.' '.$definition);
+        }
+        $this->db->query("CREATE TABLE IF NOT EXISTS training_certificate_sequences (
+            certificate_year SMALLINT UNSIGNED NOT NULL PRIMARY KEY,
+            last_sequence INT UNSIGNED NOT NULL DEFAULT 0
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     }
 
     public function get_batches()
@@ -68,6 +84,7 @@ class Certificate_model extends CI_Model
         $existing=$this->get_template($batch_id); $now=date('Y-m-d H:i:s');
         $row=array('background_path'=>$data['background_path'],'name_x'=>$data['name_x'],'name_y'=>$data['name_y'],
             'name_width'=>$data['name_width'],'font_size'=>$data['font_size'],'font_color'=>$data['font_color'],'updated_at'=>$now);
+        foreach (certificate_number_defaults() as $key=>$default) $row[$key]=isset($data[$key])?$data[$key]:$default;
         if($existing) return $this->db->where('id',$existing->id)->update('training_certificate_templates',$row);
         $row['batch_id']=(int)$batch_id; $row['created_at']=$now;
         return $this->db->insert('training_certificate_templates',$row);
@@ -96,26 +113,64 @@ class Certificate_model extends CI_Model
             ->where('i.completed_at IS NOT NULL',NULL,FALSE)->get()->row();
     }
 
+    public $last_issue_error = '';
+
+    protected function issue_time()
+    {
+        return new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok'));
+    }
+
     public function issue($batch_id, $participant_id, $invitation_id, $admin_id)
     {
+        $this->last_issue_error = '';
         if(!$this->get_template($batch_id)) return FALSE;
         $person=$this->get_eligible($batch_id,$participant_id,$invitation_id); if(!$person) return FALSE;
-        if($this->db->where(array('batch_id'=>(int)$batch_id,'participant_id'=>(int)$participant_id,'status'=>1))->count_all_results('training_certificates')) return TRUE;
-        $now=date('Y-m-d H:i:s'); $name=trim($person->title_name.$person->first_name.' '.$person->last_name);
-        $this->db->trans_start();
-        $this->db->insert('training_certificates',array('batch_id'=>(int)$batch_id,'participant_id'=>(int)$participant_id,
-            'invitation_id'=>(int)$invitation_id,'active_key'=>(int)$batch_id.'-'.(int)$participant_id,
-            'recipient_name'=>$name,'issued_by'=>$admin_id===NULL?NULL:(int)$admin_id,'issued_at'=>$now,'status'=>1,'created_at'=>$now,'updated_at'=>$now));
-        $id=(int)$this->db->insert_id(); $number='CERT-'.str_pad((string)$id,6,'0',STR_PAD_LEFT);
-        $this->db->where('id',$id)->update('training_certificates',array('certificate_no'=>$number));
-        $this->db->trans_complete(); return $this->db->trans_status();
+        $time=$this->issue_time()->setTimezone(new DateTimeZone('Asia/Bangkok'));
+        $year=(int)$time->format('Y')+543; $now=$time->format('Y-m-d H:i:s');
+        $debug=$this->db->db_debug; $this->db->db_debug=FALSE;
+        if (!$this->db->trans_begin()) { $this->db->db_debug=$debug; return FALSE; }
+        try {
+            // A single row per year serializes both single and bulk issuance.
+            if (!$this->db->query('INSERT INTO training_certificate_sequences (certificate_year,last_sequence) VALUES (?,0) ON DUPLICATE KEY UPDATE certificate_year=VALUES(certificate_year)',array($year))) throw new RuntimeException('counter');
+            $counter=$this->db->query('SELECT last_sequence FROM training_certificate_sequences WHERE certificate_year=? FOR UPDATE',array($year));
+            if (!$counter || !$counter->num_rows()) throw new RuntimeException('counter lock');
+            $last=(int)$counter->row()->last_sequence;
+            $existing=$this->db->query('SELECT id FROM training_certificates WHERE batch_id=? AND participant_id=? AND status=1 FOR UPDATE',array((int)$batch_id,(int)$participant_id));
+            if (!$existing) throw new RuntimeException('existing certificate');
+            if ($existing->num_rows()) {
+                $this->db->trans_rollback(); $this->db->db_debug=$debug; return TRUE;
+            }
+            if ($last===0) {
+                $seed=$this->db->query('SELECT COALESCE(MAX(CAST(RIGHT(certificate_no,6) AS UNSIGNED)),0) AS last_sequence FROM training_certificates WHERE certificate_no REGEXP ?',array('^SCI-'.$year.'-[0-9]{6}$'));
+                if (!$seed) throw new RuntimeException('counter seed');
+                $last=(int)$seed->row()->last_sequence;
+            }
+            if ($last>=999999) {
+                $this->last_issue_error='เลขวุฒิบัตรประจำปีเต็ม 999,999 รายการแล้ว';
+                throw new RuntimeException('sequence exhausted');
+            }
+            $next=$last+1; $number='SCI-'.$year.'-'.str_pad((string)$next,6,'0',STR_PAD_LEFT);
+            if (!$this->db->where('certificate_year',$year)->update('training_certificate_sequences',array('last_sequence'=>$next))) throw new RuntimeException('counter update');
+            $saved=$this->db->insert('training_certificates',array('batch_id'=>(int)$batch_id,'participant_id'=>(int)$participant_id,
+                'invitation_id'=>(int)$invitation_id,'active_key'=>(int)$batch_id.'-'.(int)$participant_id,'certificate_no'=>$number,
+                'recipient_name'=>trim($person->title_name.$person->first_name.' '.$person->last_name),
+                'issued_by'=>$admin_id===NULL?NULL:(int)$admin_id,'issued_at'=>$now,'status'=>1,'created_at'=>$now,'updated_at'=>$now));
+            if (!$saved || !$this->db->trans_status() || !$this->db->trans_commit()) throw new RuntimeException('certificate commit');
+            $this->db->db_debug=$debug; return TRUE;
+        } catch (Exception $error) {
+            $this->db->trans_rollback(); $this->db->db_debug=$debug;
+            log_message('error','Certificate issuance failed: '.$error->getMessage());
+            return FALSE;
+        }
     }
 
     public function issue_batch($batch_id, $admin_id)
     {
+        $this->last_issue_error='';
         $issued=0; foreach($this->get_roster($batch_id) as $row) {
             if((int)$row->registration_status===5 && $row->profile_confirmed_at && $row->completed_at && !$row->certificate_id
                 && $this->issue($batch_id,$row->participant_id,$row->invitation_id,$admin_id)) $issued++;
+            if ($this->last_issue_error) break;
         } return $issued;
     }
 
@@ -126,14 +181,14 @@ class Certificate_model extends CI_Model
 
     public function get_active_by_invitation($invitation_id)
     {
-        return $this->db->select('ct.*,t.background_path,t.name_x,t.name_y,t.name_width,t.font_size,t.font_color')
+        return $this->db->select('ct.*,t.background_path,t.name_x,t.name_y,t.name_width,t.font_size,t.font_color,t.number_x,t.number_y,t.number_width,t.number_font_size,t.number_font_color,t.number_align')
             ->from('training_certificates ct')->join('training_certificate_templates t','t.batch_id=ct.batch_id')
             ->where('ct.invitation_id',(int)$invitation_id)->where('ct.status',1)->order_by('ct.id','DESC')->get()->row();
     }
 
     public function get_active($id)
     {
-        return $this->db->select('ct.*,t.background_path,t.name_x,t.name_y,t.name_width,t.font_size,t.font_color')
+        return $this->db->select('ct.*,t.background_path,t.name_x,t.name_y,t.name_width,t.font_size,t.font_color,t.number_x,t.number_y,t.number_width,t.number_font_size,t.number_font_color,t.number_align')
             ->select('p.email,c.title AS course_title,b.batch_no')
             ->from('training_certificates ct')->join('training_certificate_templates t','t.batch_id=ct.batch_id')
             ->join('training_registration_participants p','p.id=ct.participant_id')
@@ -143,7 +198,7 @@ class Certificate_model extends CI_Model
 
     public function get_active_by_batch($batch_id)
     {
-        return $this->db->select('ct.*,t.background_path,t.name_x,t.name_y,t.name_width,t.font_size,t.font_color')
+        return $this->db->select('ct.*,t.background_path,t.name_x,t.name_y,t.name_width,t.font_size,t.font_color,t.number_x,t.number_y,t.number_width,t.number_font_size,t.number_font_color,t.number_align')
             ->select('p.email,c.title AS course_title,b.batch_no')
             ->from('training_certificates ct')->join('training_certificate_templates t','t.batch_id=ct.batch_id')
             ->join('training_registration_participants p','p.id=ct.participant_id')
@@ -168,7 +223,7 @@ class Certificate_model extends CI_Model
 
     public function get_owned_certificate($registration_id, $participant_id)
     {
-        return $this->db->select('ct.*,t.background_path,t.name_x,t.name_y,t.name_width,t.font_size,t.font_color')
+        return $this->db->select('ct.*,t.background_path,t.name_x,t.name_y,t.name_width,t.font_size,t.font_color,t.number_x,t.number_y,t.number_width,t.number_font_size,t.number_font_color,t.number_align')
             ->select('r.status AS registration_status,i.profile_confirmed_at,i.completed_at')
             ->from('training_certificates ct')->join('training_certificate_templates t','t.batch_id=ct.batch_id')
             ->join('training_registration_participants p','p.id=ct.participant_id')
