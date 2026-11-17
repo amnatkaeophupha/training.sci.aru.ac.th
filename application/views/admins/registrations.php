@@ -42,6 +42,36 @@ $format_money = function ($amount) {
     return number_format((float) $amount, 2).' บาท';
 };
 ?>
+        <style>
+            .admin-registrations-page { --reg-ink: #26364b; --reg-line: #e7edf4; color: var(--reg-ink); font-size: .9rem; }
+            .admin-registrations-page .admin-topbar h1 { font-size: 1.25rem; font-weight: 700; }
+            .admin-registrations-page .admin-topbar p { font-size: .82rem; }
+            .admin-registrations-page .admin-main { padding-top: 1.25rem !important; }
+            .admin-registrations-page .admin-stat-card { border-radius: .8rem; box-shadow: 0 .25rem .9rem rgba(32, 52, 77, .06) !important; }
+            .admin-registrations-page .admin-stat-card .card-body { padding: .95rem 1rem; }
+            .admin-registrations-page .admin-stat-card strong { margin: .35rem 0 !important; font-size: 1.65rem !important; color: #263e5d; }
+            .admin-registrations-page .admin-stat-card span, .admin-registrations-page .admin-stat-card p { font-size: .76rem !important; }
+            .admin-registrations-page .card { border-radius: .8rem; }
+            .admin-registrations-page .card-header { padding: .9rem 1rem; border-bottom-color: var(--reg-line); }
+            .admin-registrations-page .form-label { margin-bottom: .3rem; color: #43546a; font-size: .78rem; }
+            .admin-registrations-page .form-control, .admin-registrations-page .form-select { min-height: 2.35rem; border-color: #d7dfeb; border-radius: .55rem; font-size: .82rem; }
+            .admin-registrations-page .form-control:focus, .admin-registrations-page .form-select:focus { border-color: #80aee8; box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .12); }
+            .admin-registrations-page .table { font-size: .8rem; color: var(--reg-ink); }
+            .admin-registrations-page .table thead th { padding: .7rem .65rem; white-space: nowrap; background: #f6f8fb; color: #52647b; font-size: .72rem; font-weight: 700; border-bottom-color: var(--reg-line); }
+            .admin-registrations-page .table tbody td { padding: .7rem .65rem; line-height: 1.5; vertical-align: middle; border-color: #edf1f5; }
+            .admin-registrations-page .table tbody td strong { font-weight: 500; color: #455468; }
+            .admin-registrations-page .table tbody td:first-child strong { font-weight: 600; color: #52647b; }
+            .admin-registrations-page .table tbody td:nth-child(5) strong { font-weight: 600; color: #43546a; }
+            .admin-registrations-page .table tbody tr:hover { background: #f8fbff; }
+            .admin-registrations-page .table .badge { padding: .4em .6em; font-size: .68rem; font-weight: 600; white-space: normal; text-align: left; }
+            .admin-registrations-page .table .btn { font-size: .72rem; white-space: nowrap; }
+            .admin-registrations-page .alert { border: 0; border-radius: .7rem; font-size: .84rem; }
+            @media (max-width: 767.98px) {
+                .admin-registrations-page .admin-main { padding-right: .75rem; padding-left: .75rem; }
+                .admin-registrations-page .admin-stat-card .card-body { padding: .8rem; }
+                .admin-registrations-page .table tbody td { padding: .6rem .55rem; }
+            }
+        </style>
         <div class="admin-content">
             <header class="admin-topbar d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-3 px-lg-4 py-3 border-bottom">
                 <div>
@@ -51,7 +81,7 @@ $format_money = function ($amount) {
                 <a class="btn btn-dark" href="<?= site_url('admin/logout'); ?>">ออกจากระบบ</a>
             </header>
 
-            <main class="admin-main py-4">
+            <main class="admin-main py-4 admin-registrations-page">
                 <?php if ($this->session->flashdata('success')): ?>
                     <div class="alert alert-success fw-semibold" role="status"><?= html_escape($this->session->flashdata('success')); ?></div>
                 <?php endif; ?>
@@ -215,7 +245,7 @@ $format_money = function ($amount) {
                                             <td><?= number_format($participant_count); ?> คน</td>
                                             <td>
                                                 <strong class="d-block"><?= html_escape($format_money($total_amount)); ?></strong>
-                                                <?php if (!empty($registration->fee_label_snapshot)): ?><span class="small text-secondary d-block"><?= html_escape($registration->fee_label_snapshot) ?></span><?php endif; ?>
+                                                <?php if (!empty($registration->fee_label_snapshot)): ?><span class="small text-secondary d-block"><?= html_escape($registration->fee_label_snapshot === 'à¸£à¸²à¸„à¸²à¹€à¸”à¸´à¸¡' ? 'ราคาเดิม' : $registration->fee_label_snapshot) ?></span><?php endif; ?>
                                                 <span class="small text-secondary">อัปโหลดแล้ว <?= html_escape($format_money($registration->paid_amount)); ?></span>
                                             </td>
                                             <td>

@@ -18,7 +18,7 @@ $pricing_rows=isset($fee_options)?$fee_options:array();
                     <div class="col-md-5"><label class="form-label">ชื่อเงื่อนไข</label><input class="form-control" data-field="label" name="fee_options[<?= $i ?>][label]" maxlength="255" value="<?= html_escape($option['label']) ?>"></div>
                     <div class="col-md-3"><label class="form-label">ราคา/คน (บาท)</label><input class="form-control" data-field="amount" name="fee_options[<?= $i ?>][amount]" type="number" min="0" max="99999999.99" step="0.01" value="<?= html_escape($option['amount']) ?>"></div>
                     <div class="col-md-2"><label class="form-label">สถานะ</label><select class="form-select" data-field="is_active" name="fee_options[<?= $i ?>][is_active]"><option value="1" <?= (int)$option['is_active']===1?'selected':'' ?>>เปิดใช้งาน</option><option value="0" <?= (int)$option['is_active']===0?'selected':'' ?>>ปิดใช้งาน</option></select></div>
-                    <div class="col-md-2 d-flex gap-1"><button class="btn btn-outline-secondary" type="button" data-move="up" aria-label="เลื่อนขึ้น">↑</button><button class="btn btn-outline-secondary" type="button" data-move="down" aria-label="เลื่อนลง">↓</button></div>
+                    <div class="col-md-2 d-flex flex-wrap gap-1"><button class="btn btn-outline-secondary" type="button" data-move="up" aria-label="เลื่อนขึ้น">↑</button><button class="btn btn-outline-secondary" type="button" data-move="down" aria-label="เลื่อนลง">↓</button><?php if (empty($option['id'])): ?><button class="btn btn-outline-danger" type="button" data-remove>นำออก</button><?php endif; ?></div>
                 </div>
             <?php endforeach; ?>
         </div>

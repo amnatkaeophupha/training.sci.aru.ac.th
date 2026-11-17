@@ -28,6 +28,33 @@ $form_action = $is_edit
     ? site_url('admin/instructors/update/'.$edit_instructor->id)
     : site_url('admin/instructors/store');
 ?>
+        <style>
+            .admin-instructors-page { --instructor-ink: #26364b; --instructor-line: #e7edf4; color: var(--instructor-ink); font-size: .9rem; }
+            .admin-instructors-page .admin-topbar h1 { font-size: 1.25rem; font-weight: 700; }
+            .admin-instructors-page .admin-topbar p { font-size: .82rem; }
+            .admin-instructors-page .admin-main { padding-top: 1.25rem !important; }
+            .admin-instructors-page .admin-stat-card { border-radius: .8rem; box-shadow: 0 .25rem .9rem rgba(32,52,77,.06) !important; }
+            .admin-instructors-page .admin-stat-card .card-body { padding: .95rem 1rem; }
+            .admin-instructors-page .admin-stat-card strong { margin: .35rem 0 !important; font-size: 1.65rem !important; color: #263e5d; }
+            .admin-instructors-page .admin-stat-card span, .admin-instructors-page .admin-stat-card p { font-size: .76rem !important; }
+            .admin-instructors-page .card { border-radius: .8rem; }
+            .admin-instructors-page .card-header { padding: .85rem 1rem; border-bottom-color: var(--instructor-line); }
+            .admin-instructors-page .card-header h3 { font-size: .98rem; font-weight: 700; color: #263e5d; }
+            .admin-instructors-page .table { font-size: .8rem; color: var(--instructor-ink); }
+            .admin-instructors-page .table thead th { padding: .7rem .65rem; white-space: nowrap; background: #f6f8fb; color: #52647b; font-size: .72rem; font-weight: 700; border-bottom-color: var(--instructor-line); }
+            .admin-instructors-page .table tbody td { padding: .7rem .65rem; line-height: 1.5; vertical-align: middle; border-color: #edf1f5; }
+            .admin-instructors-page .table tbody tr:hover { background: #f8fbff; }
+            .admin-instructors-page .table tbody td strong { color: #455468; font-weight: 500; }
+            .admin-instructors-page .table .badge { padding: .4em .6em; font-size: .68rem; font-weight: 600; }
+            .admin-instructors-page .table .btn { font-size: .72rem; white-space: nowrap; }
+            .admin-instructors-page .alert { border: 0; border-radius: .7rem; font-size: .84rem; }
+            @media (max-width: 767.98px) {
+                .admin-instructors-page .admin-main { padding-right: .75rem; padding-left: .75rem; }
+                .admin-instructors-page .admin-stat-card .card-body { padding: .8rem; }
+                .admin-instructors-page .table tbody td { padding: .6rem .55rem; }
+                .admin-instructors-page .card-header { align-items: flex-start !important; flex-direction: column; }
+            }
+        </style>
         <div class="admin-content">
             <header class="admin-topbar d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-3 px-lg-4 py-3 border-bottom">
                 <div>
@@ -42,7 +69,7 @@ $form_action = $is_edit
                 </div>
             </header>
 
-            <main class="admin-main py-4">
+            <main class="admin-main py-4 admin-instructors-page">
                 <?php if ($this->session->flashdata('success')): ?>
                     <div class="alert alert-success fw-semibold" role="status"><?= html_escape($this->session->flashdata('success')); ?></div>
                 <?php endif; ?>

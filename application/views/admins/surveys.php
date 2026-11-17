@@ -8,6 +8,25 @@ $edit = isset($edit_survey) && $edit_survey ? $edit_survey : (object) array(
     'status' => 1
 );
 ?>
+<style>
+    .admin-surveys-page{--survey-ink:#26364b;--survey-line:#e7edf4;color:var(--survey-ink);font-size:.9rem}
+    .admin-surveys-page .admin-topbar h1{font-size:1.25rem;font-weight:700}
+    .admin-surveys-page .admin-topbar p{font-size:.82rem}
+    .admin-surveys-page .admin-main{padding-top:1.25rem!important}
+    .admin-surveys-page .card{border-radius:.8rem}
+    .admin-surveys-page .card-body{padding:1rem}
+    .admin-surveys-page h2.h5{font-size:.98rem;font-weight:700;color:#263e5d}
+    .admin-surveys-page .table{font-size:.8rem;color:var(--survey-ink)}
+    .admin-surveys-page .table thead th{padding:.7rem .65rem;white-space:nowrap;background:#f6f8fb;color:#52647b;font-size:.72rem;font-weight:700;border-bottom-color:var(--survey-line)}
+    .admin-surveys-page .table tbody td{padding:.7rem .65rem;line-height:1.5;vertical-align:middle;border-color:#edf1f5}
+    .admin-surveys-page .table tbody tr:hover{background:#f8fbff}
+    .admin-surveys-page .table tbody td strong{color:#455468;font-weight:500}
+    .admin-surveys-page .table .badge{font-size:.68rem;font-weight:600}
+    .admin-surveys-page .table .btn{font-size:.72rem;white-space:nowrap}
+    .admin-surveys-page .alert{border:0;border-radius:.7rem;font-size:.84rem}
+    .admin-surveys-page .survey-assignment-heading{font-size:.98rem;font-weight:700;color:#263e5d}
+    @media(max-width:767.98px){.admin-surveys-page .admin-main{padding-right:.75rem;padding-left:.75rem}.admin-surveys-page .card-body{padding:.8rem}.admin-surveys-page .table tbody td{padding:.6rem .55rem}}
+</style>
 <div class="admin-content">
     <header class="admin-topbar d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-3 px-lg-4 py-3 border-bottom">
         <div>
@@ -23,7 +42,7 @@ $edit = isset($edit_survey) && $edit_survey ? $edit_survey : (object) array(
         <?php endif; ?>
     </header>
 
-    <main class="admin-main py-4">
+    <main class="admin-main py-4 admin-surveys-page">
         <?php foreach (array('success' => 'success', 'error' => 'danger') as $key => $class): ?>
             <?php if ($this->session->flashdata($key)): ?>
                 <div class="alert alert-<?= $class; ?>"><?= html_escape($this->session->flashdata($key)); ?></div>

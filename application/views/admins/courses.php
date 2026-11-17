@@ -4,24 +4,6 @@ $this->load->view('admins/layouts/sidebar');
 
 $courses = isset($courses) ? $courses : array();
 $categories = isset($categories) ? $categories : array();
-$edit_course = isset($edit_course) && is_object($edit_course) ? $edit_course : (object) array(
-    'id' => NULL,
-    'category_id' => '',
-    'title' => '',
-    'slug' => '',
-    'short_description' => '',
-    'description' => '',
-    'cover_image' => '',
-    'level' => '',
-    'training_type' => '',
-    'location' => '',
-    'duration_text' => '',
-    'capacity' => 0,
-    'fee' => 0,
-    'status' => 1,
-    'is_featured' => 0,
-    'published_at' => ''
-);
 $stats = array_merge(
     array(
         'total' => 0,
@@ -33,10 +15,6 @@ $stats = array_merge(
     isset($stats) && is_array($stats) ? $stats : array()
 );
 
-$is_edit = !empty($edit_course->id);
-$form_action = $is_edit
-    ? site_url('admin/courses/update/'.$edit_course->id)
-    : site_url('admin/courses/store');
 $status_labels = array(
     1 => 'ร่าง',
     2 => 'เปิด',
@@ -53,13 +31,36 @@ $type_labels = array(
     'onsite' => 'Onsite',
     'hybrid' => 'Hybrid'
 );
-$published_value = '';
-
-if (!empty($edit_course->published_at)) {
-    $published_time = strtotime($edit_course->published_at);
-    $published_value = $published_time ? date('Y-m-d\TH:i', $published_time) : '';
-}
 ?>
+        <style>
+            .admin-courses-page { --course-ink: #26364b; --course-line: #e7edf4; color: var(--course-ink); font-size: .9rem; }
+            .admin-courses-page .admin-topbar h1 { font-size: 1.25rem; font-weight: 700; }
+            .admin-courses-page .admin-topbar p { font-size: .82rem; }
+            .admin-courses-page .admin-main { padding-top: 1.25rem !important; }
+            .admin-courses-page .admin-stat-card { border-radius: .8rem; box-shadow: 0 .25rem .9rem rgba(32, 52, 77, .06) !important; }
+            .admin-courses-page .admin-stat-card .card-body { padding: .95rem 1rem; }
+            .admin-courses-page .admin-stat-card strong { margin: .35rem 0 !important; font-size: 1.65rem !important; color: #263e5d; }
+            .admin-courses-page .admin-stat-card span, .admin-courses-page .admin-stat-card p { font-size: .76rem !important; }
+            .admin-courses-page .card { border-radius: .8rem; }
+            .admin-courses-page .card-header { padding: .85rem 1rem; border-bottom-color: var(--course-line); }
+            .admin-courses-page .card-header h3 { font-size: .98rem; font-weight: 700; }
+            .admin-courses-page .table { font-size: .8rem; color: var(--course-ink); }
+            .admin-courses-page .table thead th { padding: .7rem .65rem; white-space: nowrap; background: #f6f8fb; color: #52647b; font-size: .72rem; font-weight: 700; border-bottom-color: var(--course-line); }
+            .admin-courses-page .table tbody td { padding: .7rem .65rem; line-height: 1.5; vertical-align: middle; border-color: #edf1f5; }
+            .admin-courses-page .table tbody tr:hover { background: #f8fbff; }
+            .admin-courses-page .table tbody td strong { color: #455468; font-weight: 500; }
+            .admin-courses-page .table tbody td code { color: #78879a; font-size: .72rem; }
+            .admin-courses-page .table .badge { padding: .4em .6em; font-size: .68rem; font-weight: 600; }
+            .admin-courses-page .table .btn { font-size: .72rem; white-space: nowrap; }
+            .admin-courses-page .table td:last-child > div { gap: .35rem !important; }
+            .admin-courses-page .alert { border: 0; border-radius: .7rem; font-size: .84rem; }
+            @media (max-width: 767.98px) {
+                .admin-courses-page .admin-main { padding-right: .75rem; padding-left: .75rem; }
+                .admin-courses-page .admin-stat-card .card-body { padding: .8rem; }
+                .admin-courses-page .table tbody td { padding: .6rem .55rem; }
+                .admin-courses-page .card-header { align-items: flex-start !important; flex-direction: column; }
+            }
+        </style>
         <div class="admin-content">
             <header class="admin-topbar d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-3 px-lg-4 py-3 border-bottom">
                 <div>
@@ -67,14 +68,11 @@ if (!empty($edit_course->published_at)) {
                     <p class="mb-0 text-secondary">จัดการข้อมูลหลักสูตรอบรมและเชื่อมโยงกับหมวดหมู่หลักสูตร</p>
                 </div>
                 <div class="d-flex flex-wrap gap-2">
-                    <?php if ($is_edit): ?>
-                        <a class="btn btn-outline-dark" href="<?= site_url('admin/courses'); ?>">ยกเลิกแก้ไข</a>
-                    <?php endif; ?>
                     <a class="btn btn-dark" href="<?= site_url('admin/logout'); ?>">ออกจากระบบ</a>
                 </div>
             </header>
 
-            <main class="admin-main py-4">
+            <main class="admin-main py-4 admin-courses-page">
                 <?php if ($this->session->flashdata('success')): ?>
                     <div class="alert alert-success fw-semibold" role="status"><?= html_escape($this->session->flashdata('success')); ?></div>
                 <?php endif; ?>
@@ -137,13 +135,7 @@ if (!empty($edit_course->published_at)) {
                                 <div class="d-flex flex-wrap gap-2">
                                     <a class="btn btn-light btn-sm text-primary" href="<?= site_url('admin/categories'); ?>">หมวดหมู่หลักสูตร</a>
                                     <a class="btn btn-light btn-sm text-primary" href="<?= site_url('admin/courses'); ?>">รีเฟรช</a>
-                                    <?php if ($is_edit): ?>
-                                        <a class="btn btn-warning btn-sm text-dark" href="<?= site_url('admin/courses'); ?>">เพิ่มหลักสูตร</a>
-                                    <?php else: ?>
-                                        <button class="btn btn-warning btn-sm text-dark" type="button" data-bs-toggle="modal" data-bs-target="#courseFormModal" <?= empty($categories) ? 'disabled' : ''; ?>>
-                                            เพิ่มหลักสูตร
-                                        </button>
-                                    <?php endif; ?>
+                                    <a class="btn btn-warning btn-sm text-dark" href="<?= site_url('admin/courses/create'); ?>">เพิ่มหลักสูตร</a>
                                 </div>
                             </div>
 
@@ -189,7 +181,7 @@ if (!empty($edit_course->published_at)) {
                                                     </td>
                                                     <td>
                                                         <div class="d-flex flex-wrap gap-2">
-                                                            <a class="btn btn-sm btn-outline-primary" href="<?= site_url('admin/courses?edit='.$course->id); ?>">แก้ไข</a>
+                                                            <a class="btn btn-sm btn-outline-primary" href="<?= site_url('admin/courses/edit/'.$course->id); ?>">แก้ไข</a>
                                                             <a class="btn btn-sm btn-outline-info" href="<?= site_url('admin/course-details/'.$course->id); ?>">รายละเอียด</a>
                                                             <a class="btn btn-sm btn-outline-success" href="<?= site_url('admin/course-instructors/'.$course->id); ?>">วิทยากร</a>
                                                             <?php if (admin_can_delete($this->session)): ?>
@@ -215,145 +207,6 @@ if (!empty($edit_course->published_at)) {
 
                 </section>
 
-                <div class="modal fade" id="courseFormModal" tabindex="-1" aria-labelledby="courseFormModalLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-xl">
-                        <div class="modal-content">
-                            <form class="d-flex flex-column" method="post" action="<?= $form_action; ?>" enctype="multipart/form-data">
-                                <div class="modal-header bg-primary text-white">
-                                    <h2 class="modal-title h5" id="courseFormModalLabel"><?= $is_edit ? 'แก้ไขหลักสูตร' : 'เพิ่มหลักสูตร'; ?></h2>
-                                    <a class="btn-close" href="<?= site_url('admin/courses'); ?>" aria-label="Close"></a>
-                                </div>
-
-                                <div class="modal-body">
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-bold" for="category_id">หมวดหมู่</label>
-                                            <select class="form-select" id="category_id" name="category_id" required>
-                                                <option value="">เลือกหมวดหมู่</option>
-                                                <?php foreach ($categories as $category): ?>
-                                                    <option value="<?= (int) $category->id; ?>" <?= (int) $edit_course->category_id === (int) $category->id ? 'selected' : ''; ?>>
-                                                        <?= html_escape($category->name); ?>
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-bold" for="title">ชื่อหลักสูตร</label>
-                                            <input class="form-control" id="title" type="text" name="title" value="<?= $is_edit ? html_escape($edit_course->title) : ''; ?>" required>
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-bold" for="slug">Slug</label>
-                                            <input class="form-control" id="slug" type="text" name="slug" value="<?= $is_edit ? html_escape($edit_course->slug) : ''; ?>" placeholder="เช่น python-data-analysis">
-                                            <div class="form-text">เว้นว่างได้ ระบบจะสร้างจากชื่อหลักสูตรภาษาอังกฤษให้อัตโนมัติ</div>
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-bold" for="cover_image">รูปภาพปก 1140 x 420 px</label>
-                                            <input class="form-control" id="cover_image" type="file" name="cover_image" accept="image/jpeg,image/png,image/gif,image/webp">
-                                            <?php if ($is_edit && !empty($edit_course->cover_image)): ?>
-                                                <div class="d-flex align-items-center gap-3 mt-2">
-                                                    <img class="rounded object-fit-cover" src="<?= base_url($edit_course->cover_image); ?>" alt="<?= html_escape($edit_course->title); ?>" width="96" height="54">
-                                                    <span class="small text-secondary">เลือกรูปใหม่เพื่อแทนที่รูปเดิม</span>
-                                                </div>
-                                            <?php endif; ?>
-                                            <div class="form-text">แนะนำขนาด 1140 x 420 px รองรับ JPG, PNG, GIF, WEBP ไม่เกิน 4MB</div>
-                                        </div>
-
-                                        <div class="col-12">
-                                            <label class="form-label fw-bold" for="short_description">คำอธิบายสั้น</label>
-                                            <textarea class="form-control" id="short_description" name="short_description" rows="1"><?= $is_edit ? html_escape($edit_course->short_description) : ''; ?></textarea>
-                                        </div>
-
-                                        <div class="col-12">
-                                            <label class="form-label fw-bold" for="description">รายละเอียดหลักสูตร</label>
-                                            <textarea class="form-control" id="description" name="description" rows="3"><?= $is_edit ? html_escape($edit_course->description) : ''; ?></textarea>
-                                        </div>
-
-                                        <div class="col-12 col-md-6 col-xl-3">
-                                            <label class="form-label fw-bold" for="level">ระดับหลักสูตร</label>
-                                            <input class="form-control" id="level" type="text" name="level" value="<?= $is_edit ? html_escape($edit_course->level) : ''; ?>" placeholder="เริ่มต้น / กลาง / สูง">
-                                        </div>
-
-                                        <div class="col-12 col-md-6 col-xl-3">
-                                            <label class="form-label fw-bold" for="training_type">รูปแบบอบรม</label>
-                                            <select class="form-select" id="training_type" name="training_type">
-                                                <?php foreach ($type_labels as $value => $label): ?>
-                                                    <option value="<?= html_escape($value); ?>" <?= $edit_course->training_type === $value ? 'selected' : ''; ?>>
-                                                        <?= html_escape($label); ?>
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                        </div>
-
-                                        <div class="col-12 col-md-6 col-xl-6">
-                                            <label class="form-label fw-bold" for="location">สถานที่อบรม</label>
-                                            <input class="form-control" id="location" type="text" name="location" value="<?= $is_edit ? html_escape($edit_course->location) : ''; ?>">
-                                        </div>
-
-                                        <div class="col-12 col-md-6 col-xl-3">
-                                            <label class="form-label fw-bold" for="duration_text">ระยะเวลา</label>
-                                            <input class="form-control" id="duration_text" type="text" name="duration_text" value="<?= $is_edit ? html_escape($edit_course->duration_text) : ''; ?>" placeholder="เช่น 2 วัน">
-                                        </div>
-
-                                        <div class="col-12 col-md-6 col-xl-3">
-                                            <label class="form-label fw-bold" for="capacity">จำนวนรับ</label>
-                                            <input class="form-control" id="capacity" type="number" name="capacity" value="<?= (int) $edit_course->capacity; ?>" min="0">
-                                        </div>
-
-                                        <div class="col-12 col-md-6 col-xl-3" id="fixed-fee-field">
-                                            <label class="form-label fw-bold" for="fee">ค่าสมัคร</label>
-                                            <input class="form-control" id="fee" type="number" name="fee" value="<?= html_escape((string) $edit_course->fee); ?>" min="0" step="0.01">
-                                        </div>
-
-                                        <?php include __DIR__.'/course_fee_fields.php'; ?>
-
-                                        <div class="col-12 col-md-6 col-xl-3">
-                                            <label class="form-label fw-bold" for="status">สถานะ</label>
-                                            <select class="form-select" id="status" name="status">
-                                                <?php foreach ($status_labels as $value => $label): ?>
-                                                    <option value="<?= (int) $value; ?>" <?= (int) $edit_course->status === (int) $value ? 'selected' : ''; ?>>
-                                                        <?= html_escape($label); ?>
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                        </div>
-
-                                        <div class="col-12 col-md-6 col-xl-3">
-                                            <label class="form-label fw-bold" for="is_featured">แสดงหน้าแรก</label>
-                                            <select class="form-select" id="is_featured" name="is_featured">
-                                                <option value="0" <?= (int) $edit_course->is_featured === 0 ? 'selected' : ''; ?>>ไม่แสดง</option>
-                                                <option value="1" <?= (int) $edit_course->is_featured === 1 ? 'selected' : ''; ?>>แสดงเป็นหลักสูตรเด่น</option>
-                                            </select>
-                                        </div>
-
-                                        <div class="col-12 col-md-6 col-xl-3">
-                                            <label class="form-label fw-bold" for="published_at">วันที่เผยแพร่</label>
-                                            <input class="form-control" id="published_at" type="datetime-local" name="published_at" value="<?= html_escape($published_value); ?>">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="modal-footer">
-                                    <a class="btn btn-outline-dark" href="<?= site_url('admin/courses'); ?>">ยกเลิก</a>
-                                    <button class="btn btn-primary" type="submit" <?= empty($categories) ? 'disabled' : ''; ?>>
-                                        บันทึก
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
-                <?php if ($is_edit): ?>
-                    <script>
-                        document.addEventListener('DOMContentLoaded', function () {
-                            var modal = new bootstrap.Modal(document.getElementById('courseFormModal'));
-                            modal.show();
-                        });
-                    </script>
-                <?php endif; ?>
             </main>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
@@ -378,5 +231,4 @@ if (!empty($edit_course->published_at)) {
                 });
             });
         </script>
-<script src="<?= base_url('assets/js/course-fees.js') ?>"></script>
 <?php $this->load->view('admins/layouts/footer'); ?>

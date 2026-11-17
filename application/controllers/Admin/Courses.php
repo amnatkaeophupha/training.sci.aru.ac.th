@@ -30,16 +30,56 @@ class Courses extends CI_Controller
     public function index()
     {
         $edit_id = (int) $this->input->get('edit');
-        $edit_course = $edit_id > 0 ? $this->Course_model->get_by_id($edit_id) : NULL;
+        if ($edit_id > 0) {
+            redirect('admin/courses/edit/'.$edit_id);
+            return;
+        }
 
         $this->load->view('admins/courses', array(
             'courses' => $this->Course_model->get_all(),
             'categories' => $this->Category_model->get_all(),
-            'stats' => $this->Course_model->get_stats(),
-            'edit_course' => $edit_course,
-            'fee_options' => $edit_course ? $this->Pricing_model->options($edit_course->id) : array(),
-            'statuses' => $this->statuses,
-            'training_types' => $this->training_types
+            'stats' => $this->Course_model->get_stats()
+        ));
+    }
+
+    public function create()
+    {
+        $this->render_form();
+    }
+
+    public function edit($id)
+    {
+        $course = $this->Course_model->get_by_id((int) $id);
+        if (!$course) {
+            $this->session->set_flashdata('error', 'ไม่พบข้อมูลหลักสูตร');
+            redirect('admin/courses');
+            return;
+        }
+        $this->render_form($course);
+    }
+
+    private function render_form($course = NULL, $data = NULL, $error = '')
+    {
+        $fee_options = $course ? $this->Pricing_model->options($course->id) : array();
+        if ($data !== NULL) {
+            // Preserve submitted values on validation, upload, or persistence errors.
+            $fee_options = is_array($data['fee_options']) ? $data['fee_options'] : array();
+            $fee_options = array_values(array_filter($fee_options, 'is_array'));
+            foreach ($fee_options as &$option) {
+                $option = array_merge(array('id' => 0, 'label' => '', 'amount' => '', 'is_active' => 0), $option);
+                foreach (array('id', 'label', 'amount', 'is_active') as $key) {
+                    if (!is_scalar($option[$key])) $option[$key] = '';
+                }
+            }
+            unset($option);
+            $data['id'] = $course ? $course->id : NULL;
+            $course = (object) $data;
+        }
+        $this->load->view('admins/course_form', array(
+            'edit_course' => $course,
+            'categories' => $this->Category_model->get_all(),
+            'fee_options' => $fee_options,
+            'form_error' => $error
         ));
     }
 
@@ -50,22 +90,21 @@ class Courses extends CI_Controller
         if ($error==='') $error=$this->Pricing_model->validate_configuration($data);
 
         if ($error !== '') {
-            $this->session->set_flashdata('error', $error);
-            redirect('admin/courses');
+            $this->render_form(NULL, $data, $this->form_error($error));
             return;
         }
 
         $error = $this->upload_cover_image($data);
 
         if ($error !== '') {
-            $this->session->set_flashdata('error', $error);
-            redirect('admin/courses');
+            $this->render_form(NULL, $data, $this->form_error($error));
             return;
         }
 
         if (!$this->Course_model->save_with_fees(0,$data)) {
-            $this->session->set_flashdata('error','ไม่สามารถบันทึกหลักสูตรและเงื่อนไขราคาได้');
-            redirect('admin/courses'); return;
+            $this->discard_failed_cover($data, '');
+            $this->render_form(NULL, $data, $this->form_error('ไม่สามารถบันทึกหลักสูตรและเงื่อนไขราคาได้'));
+            return;
         }
         $this->session->set_flashdata('success', 'เพิ่มหลักสูตรเรียบร้อยแล้ว');
         redirect('admin/courses');
@@ -86,22 +125,21 @@ class Courses extends CI_Controller
         if ($error==='') $error=$this->Pricing_model->validate_configuration($data);
 
         if ($error !== '') {
-            $this->session->set_flashdata('error', $error);
-            redirect('admin/courses?edit='.(int) $id);
+            $this->render_form($course, $data, $this->form_error($error));
             return;
         }
 
         $error = $this->upload_cover_image($data);
 
         if ($error !== '') {
-            $this->session->set_flashdata('error', $error);
-            redirect('admin/courses?edit='.(int) $id);
+            $this->render_form($course, $data, $this->form_error($error));
             return;
         }
 
         if (!$this->Course_model->save_with_fees($id,$data)) {
-            $this->session->set_flashdata('error','ไม่สามารถบันทึกหลักสูตรและเงื่อนไขราคาได้');
-            redirect('admin/courses?edit='.(int)$id); return;
+            $this->discard_failed_cover($data, $course->cover_image);
+            $this->render_form($course, $data, $this->form_error('ไม่สามารถบันทึกหลักสูตรและเงื่อนไขราคาได้'));
+            return;
         }
         $this->session->set_flashdata('success', 'แก้ไขหลักสูตรเรียบร้อยแล้ว');
         redirect('admin/courses');
@@ -128,6 +166,24 @@ class Courses extends CI_Controller
         $this->Course_model->delete_course($id);
         $this->session->set_flashdata('success', 'ลบหลักสูตรเรียบร้อยแล้ว');
         redirect('admin/courses');
+    }
+
+    private function form_error($error)
+    {
+        if (!empty($_FILES['cover_image']['name'])) {
+            $error .= ' กรุณาเลือกไฟล์รูปภาพปกอีกครั้งก่อนบันทึก';
+        }
+        return $error;
+    }
+
+    private function discard_failed_cover(&$data, $original_cover)
+    {
+        if ($data['cover_image'] !== $original_cover) {
+            // This path was generated by upload_cover_image during this request.
+            $uploaded_path = FCPATH.$data['cover_image'];
+            if (is_file($uploaded_path)) unlink($uploaded_path);
+            $data['cover_image'] = $original_cover;
+        }
     }
 
     private function get_post_data($current_cover_image = '')

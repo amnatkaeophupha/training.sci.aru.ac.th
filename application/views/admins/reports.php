@@ -29,6 +29,28 @@ $format_money = function ($amount) {
     return number_format((float) $amount, 2).' บาท';
 };
 ?>
+        <style>
+            .admin-reports-page{--report-ink:#26364b;--report-line:#e7edf4;color:var(--report-ink);font-size:.9rem}
+            .admin-reports-page .admin-main{padding-top:1.25rem!important}
+            .admin-reports-page .admin-stat-card{border-radius:.8rem;box-shadow:0 .25rem .9rem rgba(32,52,77,.06)!important}
+            .admin-reports-page .admin-stat-card .card-body{padding:.95rem 1rem}
+            .admin-reports-page .admin-stat-card strong{margin:.35rem 0!important;font-size:1.65rem!important;color:#263e5d}
+            .admin-reports-page .admin-stat-card span,.admin-reports-page .admin-stat-card p{font-size:.76rem!important}
+            .admin-reports-page .card{border-radius:.8rem}
+            .admin-reports-page .card-header{padding:.85rem 1rem;border-bottom-color:var(--report-line)}
+            .admin-reports-page .card-header h2{font-size:.98rem;font-weight:700;color:#263e5d}
+            .admin-reports-page .card-body{padding:1rem}
+            .admin-reports-page .table{font-size:.8rem;color:var(--report-ink)}
+            .admin-reports-page .table thead th{padding:.7rem .65rem;white-space:nowrap;background:#f6f8fb;color:#52647b;font-size:.72rem;font-weight:700;border-bottom-color:var(--report-line)}
+            .admin-reports-page .table tbody td{padding:.7rem .65rem;line-height:1.5;vertical-align:middle;border-color:#edf1f5}
+            .admin-reports-page .table tbody tr:hover{background:#f8fbff}
+            .admin-reports-page .table tbody td strong{color:#455468;font-weight:500}
+            .admin-reports-page .table tbody td a.fw-bold{font-weight:600!important}
+            .admin-reports-page .border.rounded-3{border-color:var(--report-line)!important;background:#fbfcfe}
+            .admin-reports-page .border.rounded-3 strong{font-size:.84rem}
+            .admin-reports-page .alert{border:0;border-radius:.7rem;font-size:.84rem}
+            @media(max-width:767.98px){.admin-reports-page .admin-main{padding-right:.75rem;padding-left:.75rem}.admin-reports-page .admin-stat-card .card-body,.admin-reports-page .card-body{padding:.8rem}.admin-reports-page .table tbody td{padding:.6rem .55rem}.admin-reports-page .card-header{align-items:flex-start!important;flex-direction:column}}
+        </style>
         <div class="admin-content">
             <header class="admin-topbar d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-3 px-lg-4 py-3 border-bottom">
                 <div>
@@ -41,7 +63,7 @@ $format_money = function ($amount) {
                 </div>
             </header>
 
-            <main class="admin-main py-4">
+            <main class="admin-main py-4 admin-reports-page">
                 <?php if (!$tables_ready): ?>
                     <div class="alert alert-warning fw-semibold" role="alert">
                         ยังไม่พบตารางข้อมูลหลักสำหรับรายงาน กรุณารัน SQL ของระบบลงทะเบียนก่อน

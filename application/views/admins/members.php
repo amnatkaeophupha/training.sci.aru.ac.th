@@ -2,6 +2,25 @@
 <style>
 .member-modal-header{background:linear-gradient(135deg,#173b67 0%,#2563a6 55%,#2f80c9 100%);color:#fff;border-bottom:0;padding:1.1rem 1.5rem;box-shadow:0 4px 16px rgba(23,59,103,.18)}
 .member-modal-header .modal-title{font-weight:700;letter-spacing:.01em}
+.admin-members-page{--member-ink:#26364b;--member-line:#e7edf4;color:var(--member-ink);font-size:.9rem}
+.admin-members-page .admin-topbar h1{font-size:1.25rem;font-weight:700}
+.admin-members-page .admin-topbar p{font-size:.82rem}
+.admin-members-page .admin-main{padding-top:1.25rem!important}
+.admin-members-page .card{border-radius:.8rem}
+.admin-members-page .admin-stat-card .card-body{padding:.95rem 1rem}
+.admin-members-page .admin-stat-card strong{font-size:1.65rem!important;color:#263e5d}
+.admin-members-page .admin-stat-card span{font-size:.76rem!important}
+.admin-members-page .form-control,.admin-members-page .form-select{min-height:2.35rem;border-color:#d7dfeb;border-radius:.55rem;font-size:.82rem}
+.admin-members-page .form-control:focus,.admin-members-page .form-select:focus{border-color:#80aee8;box-shadow:0 0 0 .2rem rgba(13,110,253,.12)}
+.admin-members-page .table{font-size:.8rem;color:var(--member-ink)}
+.admin-members-page .table thead th{padding:.7rem .65rem;white-space:nowrap;background:#f6f8fb;color:#52647b;font-size:.72rem;font-weight:700;border-bottom-color:var(--member-line)}
+.admin-members-page .table tbody td{padding:.7rem .65rem;line-height:1.5;vertical-align:middle;border-color:#edf1f5}
+.admin-members-page .table tbody tr:hover{background:#f8fbff}
+.admin-members-page .table tbody td strong{color:#455468;font-weight:500}
+.admin-members-page .table .badge{font-size:.68rem;font-weight:600}
+.admin-members-page .table .btn{font-size:.72rem;white-space:nowrap}
+.admin-members-page .alert{border:0;border-radius:.7rem;font-size:.84rem}
+@media(max-width:767.98px){.admin-members-page .admin-main{padding-right:.75rem;padding-left:.75rem}.admin-members-page .admin-stat-card .card-body{padding:.8rem}.admin-members-page .table tbody td{padding:.6rem .55rem}}
 </style>
 <div class="admin-content">
     <header class="admin-topbar d-flex justify-content-between align-items-center gap-3 px-3 px-lg-4 py-3 border-bottom">
@@ -9,7 +28,7 @@
         <p class="mb-0 text-secondary">ตรวจสอบข้อมูลและค้นหาสมาชิกที่ลงทะเบียนในระบบ</p></div>
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#memberModal" id="add-member">+ เพิ่มสมาชิก</button>
     </header>
-    <main class="admin-main py-4">
+    <main class="admin-main py-4 admin-members-page">
         <?php if($this->session->flashdata('success')): ?><div class="alert alert-success"><?= html_escape($this->session->flashdata('success')) ?></div><?php endif; ?>
         <?php if($this->session->flashdata('error')): ?><div class="alert alert-danger"><?= html_escape($this->session->flashdata('error')) ?></div><?php endif; ?>
         <section class="row row-cols-1 row-cols-md-3 g-3 mb-4">

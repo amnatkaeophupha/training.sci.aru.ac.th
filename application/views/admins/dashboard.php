@@ -40,6 +40,33 @@ $format_money = function ($amount) {
 };
 $today_label = date('d/m/').((int) date('Y') + 543);
 ?>
+        <style>
+            .admin-dashboard-page{--dashboard-ink:#26364b;--dashboard-line:#e7edf4;color:var(--dashboard-ink);font-size:.9rem}
+            .admin-dashboard-page .admin-main{padding-top:1.25rem!important}
+            .admin-dashboard-page .admin-hero{border-radius:1rem!important;box-shadow:0 .6rem 1.8rem rgba(24,51,82,.12)!important}
+            .admin-dashboard-page .admin-hero .card-body{padding:1.75rem!important}
+            .admin-dashboard-page .admin-hero p:first-child{font-size:.88rem}
+            .admin-dashboard-page .admin-hero h2{font-size:clamp(1.4rem,2.2vw,2rem);line-height:1.35;letter-spacing:-.015em}
+            .admin-dashboard-page .admin-hero p:not(:first-child){max-width:42rem;font-size:.88rem;line-height:1.7}
+            .admin-dashboard-page .admin-stat-card{border-radius:.8rem;box-shadow:0 .25rem .9rem rgba(32,52,77,.06)!important}
+            .admin-dashboard-page .admin-stat-card .card-body{padding:.95rem 1rem}
+            .admin-dashboard-page .admin-stat-card strong{margin:.35rem 0!important;font-size:1.65rem!important;color:#263e5d}
+            .admin-dashboard-page .admin-stat-card span,.admin-dashboard-page .admin-stat-card p{font-size:.76rem!important}
+            .admin-dashboard-page .card{border-radius:.8rem}
+            .admin-dashboard-page .card-header{padding:.85rem 1rem;border-bottom-color:var(--dashboard-line)}
+            .admin-dashboard-page .card-header h3{font-size:.98rem;font-weight:700;color:#263e5d}
+            .admin-dashboard-page .table{font-size:.8rem;color:var(--dashboard-ink)}
+            .admin-dashboard-page .table thead th{padding:.7rem .65rem;white-space:nowrap;background:#f6f8fb;color:#52647b;font-size:.72rem;font-weight:700;border-bottom-color:var(--dashboard-line)}
+            .admin-dashboard-page .table tbody td{padding:.7rem .65rem;line-height:1.5;vertical-align:middle;border-color:#edf1f5}
+            .admin-dashboard-page .table tbody tr:hover{background:#f8fbff}
+            .admin-dashboard-page .table tbody td strong{color:#455468;font-weight:500}
+            .admin-dashboard-page .table .badge,.admin-dashboard-page .list-group .badge{font-size:.68rem;font-weight:600}
+            .admin-dashboard-page .list-group-item{padding:.85rem 1rem;border-color:#edf1f5;font-size:.82rem}
+            .admin-dashboard-page .list-group-item strong{font-weight:600;color:#40536c}
+            .admin-dashboard-page .list-group-item .small{font-size:.74rem}
+            .admin-dashboard-page .alert{border:0;border-radius:.7rem;font-size:.84rem}
+            @media(max-width:767.98px){.admin-dashboard-page .admin-main{padding-right:.75rem;padding-left:.75rem}.admin-dashboard-page .admin-hero .card-body{padding:1.25rem!important}.admin-dashboard-page .admin-stat-card .card-body{padding:.8rem}.admin-dashboard-page .table tbody td{padding:.6rem .55rem}}
+        </style>
         <div class="admin-content">
             <header class="admin-topbar d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-3 px-lg-4 py-3 border-bottom">
                 <div>
@@ -52,7 +79,7 @@ $today_label = date('d/m/').((int) date('Y') + 543);
                 </div>
             </header>
 
-            <main class="admin-main py-4">
+            <main class="admin-main py-4 admin-dashboard-page">
                 <?php if (!$tables_ready): ?>
                     <div class="alert alert-warning fw-semibold" role="alert">
                         ยังไม่พบตารางข้อมูลลงทะเบียน กรุณารัน SQL ของระบบก่อนใช้งาน Dashboard เต็มรูปแบบ
